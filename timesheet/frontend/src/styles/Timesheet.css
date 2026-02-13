@@ -1,0 +1,43 @@
+/* Task details styling */
+.task-details-area {
+  flex: 1;
+  padding: 40px;
+  text-align: left;
+}
+
+.task-header-row, .task-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 80px 2fr;
+  gap: 15px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.task-header-row {
+  font-weight: bold;
+  color: #666;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+}
+
+.task-row input, .task-row select {
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.add-task-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: transparent;
+  border: 2px dashed var(--border-color);
+  cursor: pointer;
+  color: #666;
+  font-weight: 600;
+}
+
+.add-task-button:hover {
+  background: #f0f0f0;
+  border-color: #999;
+}
+

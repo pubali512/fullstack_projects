@@ -1,0 +1,15 @@
+#root {
+  width: 100vw;       /* Occupy full viewport width */
+  min-height: 100vh;  /* Occupy full viewport height */
+  margin: 0;          /* Remove the centering margin */
+  padding: 0;         /* Remove global padding so NavBar touches the edges */
+  text-align: center; /* You can keep this or move it to specific components */
+}
+
+/* Ensure the body doesn't have default margins either */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Prevent accidental horizontal scrolling */
+}
+

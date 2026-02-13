@@ -1,0 +1,74 @@
+
+/* Common styles for the entire application */ 
+/* The container for the entire form */
+:root {
+  --sidebar-bg: #f8f9fa;
+  --active-blue: #e7f1ff;
+  --text-main: #212529;
+  --accent-blue: #0056d2;
+  --border-color: #dee2e6;
+}
+
+
+/* 
+ * Common styles for all pages 
+ * 
+ * - Each page has a container 
+ * - A sidebar on the left (20% width) for navigation or selection 
+ * - A main content area on the right (80% width) for forms or details 
+ */
+
+.container {
+  display: flex;
+  height: calc(100vh - 100px);
+}
+
+/* Sidebar Styling */
+.sidebar {
+  width: 300px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.sidebar-card {
+  padding: 15px;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-bottom: 10px;
+}
+
+.sidebar-card.active {
+  border-color: var(--accent-blue);
+  background: var(--active-blue);
+}
+
+.sidebar-info {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+
+.apply-button {
+  margin-top: 20px;
+  padding: 10px 40px;
+  background-color: var(--accent-blue);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+
+  align-self: center;
+}
+
+.apply-button:hover {
+  background: #f0f0f0;
+  border-color: #999;
+}
