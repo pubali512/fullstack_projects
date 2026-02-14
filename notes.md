@@ -1,315 +1,74 @@
+# React for front-end setup 
 
-# Windows React App Creation 
+- Prerequisites:
+  - Node.js installed (https://nodejs.org/en/ - LTS))
+  - VS code extensions: React, Vite, JavaScript syntax highlighting, Prettier 
 
-## **Create the React App (Timesheet Frontend)**
 
-### **Step 1 — Choose / Create Workspace**
+- Project structure:
+  - src/
+    - app/ (App shell, routing)
+    - pages/ (e.g., Projects, Tasks, Timesheet)
+    - components/ (Header, etc.)
+    - services/ (API calls)
+    - styles/ (CSS files)
+    - main.jsx (entry point)
+    - index.css (global styles)
+  - index.html (Vite template) 
+  - package.json (dependencies, scripts)
+  - vite.config.js (Vite configuration)
+  - package-lock.json (dependency tree) 
 
-Open **PowerShell** and go to where you keep code.
-Example:
 
+## Setup commands and steps
+
+- Create React app with Vite: 
 ```powershell
-mkdir C:\dev
-cd C:\dev
-```
+  npm create vite@latest <project-directory> 
+```  
+Choose React + JavaScript when prompted
 
-(If `C:\dev` already exists, just `cd` into it.)
-
----
-
-### **Step 2 — Create React App with Vite**
-
-Run:
-
+- Install dependencies (React, Vite, etc.): 
 ```powershell
-npm create vite@latest timesheet-frontend
+  cd <project-directory>
+  npm install
 ```
 
-When prompted, choose:
-
-1. **Select a framework** → `React`
-2. **Select a variant** → `JavaScript`
-
-✔ This creates the project and installs the React template.
-
----
-
-### **Step 3 — Install Dependencies**
-
+- Start development server: 
 ```powershell
-cd timesheet-frontend
-npm install
+  npm run dev
 ```
 
-This installs:
+- Open browser at http://localhost:5173/ to see the app running 
 
-* React
-* React DOM
-* Vite
-* Dev dependencies
 
----
+## Troubleshooting/issues  
 
-### **Step 4 — Start Development Server**
-
+- npm might not run because of execution policy on Windows. To fix, run PowerShell as administrator and execute: 
 ```powershell
-npm run dev
+  Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-You should see something like:
+# Spring boot backend setup 
 
-```text
-Local: http://localhost:5173/
-```
+- Prerequisites:
+  - Java JDK installed (https://adoptium.net/ - JDK 21) 
+    - JAVA_HOME environment variable set to JDK installation path 
+    - Path extended to include JDK bin directory 
+  - Maven installed (https://maven.apache.org/download.cgi) (Maven 3.9.x or later)
+    - MAVEN_HOME environment variable set to Maven installation path 
+    - Path extended to include Maven bin directory
+    - Test with mvn -v in terminal to confirm installation
+  - VS code extensions: Java Extension Pack, Spring Boot Extension Pack, Java Test Runner, Maven for Java 
 
-Open that URL in your browser.
+- Project structure: *TBD*
 
----
+## Setup commands and steps
 
-### **Step 5 — Verify Everything Works**
-
-You should see:
-
-* Vite + React welcome page
-* Page loads fast
-* No errors in terminal
-
-Quick test:
-
-1. Open `src/App.jsx`
-2. Change some text
-3. Save → browser auto-refreshes
-
-✅ Hot reload working.
-
----
-
-### **What You Have Now**
-
-You’ve successfully created:
-
-* A modern **React frontend**
-* Local dev environment
-* Cross-platform-ready setup
-* Base for:
-
-  * Web app
-  * Tauri desktop app
-  * Spring Boot backend integration
-
-This is **exactly how production React apps start**.
-
----
-
-### **Next Logical Step (Choose One)**
-
-We should proceed methodically. Pick **one**:
-
-1️⃣ **Clean up boilerplate**
-
-* Remove demo content
-* Prepare folder structure (`components/`, `pages/`, `services/`)
-
-2️⃣ **Add basic layout**
-
-* App shell
-* Navigation
-* Placeholder pages (Projects, Tasks, Timesheet)
-
-3️⃣ **Prepare backend integration**
-
-* API service
-* Environment variables
-* Mock data
-
-Tell me **which number** you want next, and we’ll continue.
-
-
-# React structure creation 
-
-Perfect — this is the *right* moment to slow down and put a **clean, professional structure** in place.
-We’ll keep it simple, scalable, and aligned with how React apps are built in real teams.
-
-Below I’ll **explain first**, then give **exact steps**.
-
----
-
-# **Target Project Structure (Frontend)**
-
-We want to move from Vite’s demo layout to something like this:
-
-```text
-timesheet-frontend/
-│
-├─ public/
-│
-├─ src/
-│  ├─ app/                # App shell & routing
-│  │  └─ App.jsx
-│  │
-│  ├─ pages/              # Top-level screens
-│  │  ├─ ProjectsPage.jsx
-│  │  ├─ TasksPage.jsx
-│  │  └─ TimesheetPage.jsx
-│  │
-│  ├─ components/         # Reusable UI components
-│  │  └─ Header.jsx
-│  │
-│  ├─ services/           # API / data access (future)
-│  │  └─ api.js
-│  │
-│  ├─ styles/             # Global styles
-│  │  └─ main.css
-│  │
-│  ├─ main.jsx            # React entry point
-│  └─ index.css
-│
-├─ package.json
-└─ vite.config.js
-```
-
-This structure:
-
-* Scales cleanly
-* Separates concerns
-* Is easy to explain in interviews
-
----
-
-## **Step 1 — Clean Up Vite Boilerplate**
-
-Inside `src/`, delete:
-
-* `assets/`
-* Any demo images/logos
-
-Edit `src/App.jsx` → replace contents with:
-
-```jsx
-function App() {
-  return (
-    <div>
-      <h1>Timesheet App</h1>
-    </div>
-  );
-}
-
-export default App;
-```
-
-This confirms we’re in control.
-
----
-
-## **Step 2 — Create Folders**
-
-From the project root (`timesheet-frontend`):
-
+- Build and run Spring Boot application: 
 ```powershell
-mkdir src\pages
-mkdir src\components
-mkdir src\services
-mkdir src\styles
-mkdir src\app
+  mvn clean install 
+  mvn spring-boot:run
 ```
 
----
-
-## **Step 3 — Move App Component**
-
-1. Move `App.jsx` into:
-
-   ```text
-   src/app/App.jsx
-   ```
-
-2. Update `src/main.jsx`:
-
-```jsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './app/App';
-import './index.css';
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-```
-
----
-
-## **Step 4 — Add Placeholder Pages**
-
-Create these files:
-
-### `src/pages/ProjectsPage.jsx`
-
-```jsx
-export default function ProjectsPage() {
-  return <h2>Projects</h2>;
-}
-```
-
-### `src/pages/TasksPage.jsx`
-
-```jsx
-export default function TasksPage() {
-  return <h2>Tasks</h2>;
-}
-```
-
-### `src/pages/TimesheetPage.jsx`
-
-```jsx
-export default function TimesheetPage() {
-  return <h2>Timesheet</h2>;
-}
-```
-
----
-
-## **Step 5 — Verify Build Still Works**
-
-Run:
-
-```powershell
-npm run dev
-```
-
-Open browser → you should see:
-
-```
-Timesheet App
-```
-
-No errors = clean foundation ✅
-
----
-
-## **What You’ve Achieved**
-
-You now have:
-
-* A **non-demo React structure**
-* Clear separation of concerns
-* A foundation ready for:
-
-  * Routing
-  * Backend integration
-  * Desktop packaging
-
-This is **exactly what interviewers want to see**.
-
----
-
-## **Next Step (Choose One)**
-
-We proceed *one layer at a time*. Pick one:
-
-1️⃣ **Add routing (React Router)**
-2️⃣ **Create a basic layout + navigation**
-3️⃣ **Introduce mock data + service layer**
-
-Tell me the number and we’ll continue cleanly.
+## Troubleshooting/issues
