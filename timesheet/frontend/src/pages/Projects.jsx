@@ -4,7 +4,7 @@ import '../styles/Common.css';
 import '../styles/Projects.css'
 
 // Import mock data or API services as needed
-import { projects, tasks } from '../services/api';
+import { projects, tasks, createProject } from '../services/api';
 
 
 const FormState = {
@@ -48,8 +48,11 @@ function handleGenericChange(formName, e, setFormData) {
   }));
 };
 
-function handleSubmit(formName, e, formData) {
+async function handleSubmit(formName, e, formData) {
   console.log(`Submitting form: ${formName}`, formData[formName]);
+
+  const entry = await createProject(formData[formName]);
+  console.log('API Response:', entry);
 }
 
 

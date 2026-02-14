@@ -77,3 +77,14 @@ export function getTimeEntriesForWeek(mondayDate) {
 
     return timeEntries.filter(entry => weekDates.includes(entry.date));
 }   
+
+
+const API_URL = 'http://localhost:8080/api/projects';
+export async function createProject(entry) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entry),
+  });
+  return res.json(); 
+}
