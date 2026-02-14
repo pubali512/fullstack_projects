@@ -6,6 +6,7 @@ const linkStyle = ({ isActive }) => ({
     textDecoration: 'none',
     color: isActive ? 'blue' : 'black',
     fontWeight: isActive ? 'bold' : 'normal',
+    fontSize: '1.5rem',
 });
 
 

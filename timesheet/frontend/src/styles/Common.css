@@ -25,7 +25,7 @@
 
 /* Sidebar Styling */
 .sidebar {
-  width: 300px;
+  width: 20%;
   background: var(--sidebar-bg);
   border-right: 1px solid var(--border-color);
   padding: 20px;
@@ -54,7 +54,6 @@
   justify-content: space-between;
   font-weight: 600;
 }
-
 
 .apply-button {
   margin-top: 20px;
