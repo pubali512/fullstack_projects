@@ -9,13 +9,14 @@ import '../styles/App.css';
 import ProjectsPage from '../pages/Projects';
 import TimesheetPage from '../pages/Timesheet';
 import DashboardPage from '../pages/Dashboard';
+import { getProjects } from '../services/Api'; 
 
 
 /* Navigation Bar */
-const NavItems = { 
-    '/': 'Dashboard', 
-    '/projects': 'Projects', 
-    '/timesheet': 'Timesheet' 
+const NavItems = {
+    '/': 'Dashboard',
+    '/projects': 'Projects',
+    '/timesheet': 'Timesheet'
 };
 
 const linkStyle = ({ isActive }) => ({
@@ -42,6 +43,13 @@ function NavBar({ links = NavItems }) {
 
 /* Main App Component */
 export default function App() {
+    const [projects, setProjects] = useState([]);
+
+    useEffect(() => {
+        getProjects().then(setProjects);
+    }, []);
+
+
     return (
         <div>
             <BrowserRouter>
@@ -49,8 +57,8 @@ export default function App() {
                 <NavBar links={NavItems} />
                 <Routes>
                     <Route path="/" element={<DashboardPage />} />
-                    <Route path="/projects" element={<ProjectsPage />} />
-                    <Route path="/timesheet" element={<TimesheetPage />} />
+                    <Route path="/projects" element={<ProjectsPage projects={projects} />} />
+                    <Route path="/timesheet" element={<TimesheetPage projects={projects} />} />
                 </Routes>
             </BrowserRouter>
         </div>

@@ -82,6 +82,7 @@ export function getTimeEntriesForWeek(mondayDate) {
 /* API Integration */
 const API_PROJECTS = 'http://localhost:8080/api/projects';
 
+// Create or update a project (depending on whether entry contains an id) 
 export async function createProject(entry) {
   const res = await fetch(API_PROJECTS, {
     method: 'POST',
@@ -91,10 +92,45 @@ export async function createProject(entry) {
   return res.json(); 
 }
 
+export async function updateProject(entry) {
+
+  const projectId = entry.projectId.split(' (')[0]; 
+  let data = {projectId: projectId, 
+    projectName: entry.projectName, 
+    description: entry.description};
+
+  const res = await fetch(API_PROJECTS, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json(); 
+}
+
 export async function getProjects() {
-    const res = await fetch(API_PROJECTS);
-    if (!res.ok) {
-        throw new Error('Network response was not ok');
-    }
-    return res.json();
+  const res = await fetch(API_PROJECTS);
+  if (!res.ok) {
+    throw new Error('Network response was not ok');
+  }
+  return res.json();
+}
+
+export async function createTask(entry) {
+
+  // Extract projectId from the format "Project Name (ProjectID)"
+  const projectId = entry.projectId.split(' (')[0]; 
+  const API_TASKS = `http://localhost:8080/api/projects/${projectId}/tasks`;
+
+  const data = {taskId: entry.taskId, 
+    taskName: entry.taskName, 
+    description: entry.description};
+
+  console.log(`Creating task for project ${projectId} with data:`, data);
+
+  const res = await fetch(API_TASKS, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json(); 
 }
