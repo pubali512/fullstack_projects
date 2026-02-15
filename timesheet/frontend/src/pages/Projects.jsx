@@ -91,6 +91,7 @@ function CreateProjectForm({ formData, setFormData }) {
     <>
       <div className="form-container">
         <h3 className='form-header'>Create New Project</h3>
+        {/*<hr style={{border: '1px solid #ccc', margin: '10px 0'}}></hr>*/}
         <div className="form-grid">
           <label>Project Name</label>
           <input
