@@ -1,12 +1,14 @@
 // Business Logic
 package com.timesheetapp.service;
 
+import com.timesheetapp.TaskTotalDTO;
 import com.timesheetapp.model.*;
 import com.timesheetapp.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -83,6 +85,13 @@ public class TimesheetService {
                 .flatMap(task -> task.getTimesheets().stream())
                 .mapToDouble(Timesheet::getHours)
                 .sum();
+    }
+
+    /**
+     * Fetches the total hours grouped by task for a specific date range.
+     */
+    public List<TaskTotalDTO> getTaskSummary(LocalDate start, LocalDate end) {
+        return timesheetRepo.getTotalHoursByTask(start, end);
     }
 }
 
