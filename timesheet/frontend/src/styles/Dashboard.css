@@ -1,0 +1,57 @@
+.dashboard-content {
+    margin-top: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 0.5%;
+    padding-left: 5%;
+    padding-right: 5%;
+}
+
+.dashboard-input {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.dashboard-label {
+    font-weight: 600;
+    text-align: left;
+}
+
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.dashboard-table th {
+    background-color: #f1f3f5;
+    padding: 15px;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+    color: #495057;
+}
+
+.dashboard-table td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    color: #212529;
+}
+
+/* Hover effect for better readability */
+.dashboard-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Right-align numeric columns for better data visualization */
+.dashboard-table th:nth-child(3),
+.dashboard-table td:nth-child(3),
+.dashboard-table th:nth-child(4),
+.dashboard-table td:nth-child(4) {
+    text-align: right;
+}

@@ -4,6 +4,7 @@
   margin: 0;          /* Remove the centering margin */
   padding: 0;         /* Remove global padding so NavBar touches the edges */
   text-align: center; /* You can keep this or move it to specific components */
+  height: 100%;
 }
 
 /* Ensure the body doesn't have default margins either */

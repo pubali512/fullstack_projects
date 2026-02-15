@@ -60,6 +60,7 @@ Choose React + JavaScript when prompted
     - Path extended to include Maven bin directory
     - Test with mvn -v in terminal to confirm installation
   - VS code extensions: Java Extension Pack, Spring Boot Extension Pack, Java Test Runner, Maven for Java 
+  - Optional: Postman for API testing (https://www.postman.com/downloads/) 
 
 - Project structure: *TBD*
 
@@ -70,5 +71,7 @@ Choose React + JavaScript when prompted
   mvn clean install 
   mvn spring-boot:run
 ```
+
+- Open
 
 ## Troubleshooting/issues
