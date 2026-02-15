@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import '../styles/Common.css';
 import '../styles/Timesheet.css';
-import { getProjects, getTasks, getTimeEntriesForWeek } from '../services/api';
+import { getProjects, getTasks, getTimeEntriesForWeek } from '../services/Api';
 import { getMondayOfWeek, getMondayOfCurrentWeek, } from '../components/Utils';
 
 

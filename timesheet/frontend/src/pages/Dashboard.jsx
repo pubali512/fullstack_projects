@@ -6,7 +6,7 @@ import '../styles/Projects.css'
 import { getMondayOfWeek, getSundayOfWeek, getFirstDayOfCurrMonth, getLastDayOfCurrMonth, getMondayOfCurrentWeek, getSundayOfCurrentWeek } from '../components/Utils'; 
 
 // Import mock data or API services as needed
-import { timeEntries } from '../services/api';
+import { timeEntries } from '../services/Api';
 
 const modes = ["Current week", "Current month", "Selected dates"];
 

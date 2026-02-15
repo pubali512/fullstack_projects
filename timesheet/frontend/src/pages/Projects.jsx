@@ -4,7 +4,7 @@ import '../styles/Common.css';
 import '../styles/Projects.css'
 
 // Import mock data or API services as needed
-import { projects, tasks, createProject } from '../services/api';
+import { projects, tasks, getProjects, getTasks,  createProject } from '../services/Api';
 
 
 const FormState = {
@@ -51,7 +51,7 @@ function handleGenericChange(formName, e, setFormData) {
 function taskOptions(formData) {
 
   console.log('Generating task options for project ID:', formData.edit_task.selectProjectId); 
-  console.log('Selected tasks:', tasks.filter(t => t.projectId === formData.edit_task.selectProjectId));
+  console.log('Selected tasks:', getTasks({ projectId: formData.edit_task.selectProjectId }));
 
   return formData.edit_task.selectProjectId && tasks
     .filter(task => task.projectId === formData.edit_task.selectProjectId)

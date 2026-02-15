@@ -1,4 +1,3 @@
-
 export const projects = [
     { id: 'ABC123', name: 'Project Alpha', description: 'Description for Project Alpha' },
     { id: 'DEF456', name: 'Project Beta', description: 'Description for Project Beta' },
@@ -46,55 +45,3 @@ export const timeEntries = [
     { projectId: 'ABC123', taskId: 'TAS003', date: '2026-02-09', hours: 5, notes: 'Performance optimization' },
     { projectId: 'DEF456', taskId: 'TAS002', date: '2026-02-10', hours: 4, notes: 'Deployment preparation' },
 ];
-
-/*
-export function getProjects() {
-    return projects; 
-}
-*/ 
-
-export function getTasks(task) {
-    return tasks.filter(t => t.projectId === task.projectId);
-}
-
-/**
- * Retrieves time entries for a specified week.
- * 
- * @param {string} mondayDate - The start date of the week (format: YYYY-MM-DD)
- * @returns {Array<Object>} An array of time entry objects containing projectId, taskId, date, hours, and notes
- * @example
- * const entries = getTimeEntriesForWeek('2026-01-25');
- * 
- */
-export function getTimeEntriesForWeek(mondayDate) {
-
-    const weekDates = [];
-    const startDate = new Date(mondayDate);
-    for (let i = 0; i < 7; i++) {
-        const date = new Date(startDate);
-        date.setDate(date.getDate() + i);
-        weekDates.push(date.toISOString().split('T')[0]);
-    }
-
-    return timeEntries.filter(entry => weekDates.includes(entry.date));
-}   
-
-/* API Integration */
-const API_PROJECTS = 'http://localhost:8080/api/projects';
-
-export async function createProject(entry) {
-  const res = await fetch(API_PROJECTS, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(entry),
-  });
-  return res.json(); 
-}
-
-export async function getProjects() {
-    const res = await fetch(API_PROJECTS);
-    if (!res.ok) {
-        throw new Error('Network response was not ok');
-    }
-    return res.json();
-}
