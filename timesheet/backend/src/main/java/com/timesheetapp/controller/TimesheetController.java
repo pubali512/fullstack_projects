@@ -1,12 +1,15 @@
 // API Access
 package com.timesheetapp.controller;
 
+import com.timesheetapp.TaskTotalDTO;
 import com.timesheetapp.model.*;
 import com.timesheetapp.service.TimesheetService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -66,6 +69,13 @@ public class TimesheetController {
         // This calls the logic you already wrote!
         Double total = service.calculateTotalProjectHours(projectId);
         return ResponseEntity.ok(total);
+    }
+
+    @GetMapping("/summary")
+    public List<TaskTotalDTO> getSummary(
+            @RequestParam("start") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam("end") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+        return service.getTaskSummary(start, end);
     }
 }
 
