@@ -3,7 +3,7 @@ import '../styles/Common.css';
 import '../styles/Dashboard.css'
 import '../styles/Projects.css'
 
-import { getMondayOfWeek, getSundayOfWeek, getFirstDayOfCurrMonth, getLastDayOfCurrMonth } from '../components/Utils'; 
+import { getMondayOfWeek, getSundayOfWeek, getFirstDayOfCurrMonth, getLastDayOfCurrMonth, getMondayOfCurrentWeek, getSundayOfCurrentWeek } from '../components/Utils'; 
 
 // Import mock data or API services as needed
 import { timeEntries } from '../services/api';
@@ -15,21 +15,18 @@ function handleFilterChange(e, setMode, setStartDate, setEndDate) {
   setMode(selectedMode);
 
   if (selectedMode === modes[0]) {
-    const today = new Date();
-    const monday = getMondayOfWeek(today.toISOString().split('T')[0]);
-    setStartDate(monday);
-    setEndDate(getSundayOfWeek(monday));
+    setStartDate(getMondayOfCurrentWeek());
+    setEndDate(getSundayOfCurrentWeek());
   } else if (selectedMode === modes[1]) {
-    const today = new Date();
-    const firstDay = getFirstDayOfCurrMonth(today.toISOString().split('T')[0]);
-    setStartDate(firstDay);
-    setEndDate(getLastDayOfCurrMonth(today.toISOString().split('T')[0]));
+
+    setStartDate(getFirstDayOfCurrMonth());
+    setEndDate(getLastDayOfCurrMonth());
+
   } else {
     setStartDate('');
     setEndDate('');
   }
 
-  console.log(`Filter changed to ${selectedMode}. Start Date: ${setStartDate}, End Date: ${setEndDate}`); 
 }
 
 function DateSelectionInputs({ mode, setStartDate, setEndDate }) {
