@@ -2,10 +2,7 @@ import React, { useState } from 'react';
 
 import '../styles/Common.css';
 import '../styles/Timesheet.css';
-import { getProjects, getTasks, getTimeEntriesForWeek } from '../services/Api';
-import { getMondayOfWeek, getMondayOfCurrentWeek, } from '../components/Utils';
-
-
+import { getMondayOfWeek, getMondayOfCurrentWeek, getTasksForProject, getTasksForProjectAndTaskId } from '../components/Utils';
 
 function convertDayToDate(selectedDateOfMonday, dayName) {
   const dayOffsets = {
@@ -66,10 +63,10 @@ function DayPickerSidebar({ selectedDay, setSelectedDay, setSelectedDateOfMonday
     <aside className="sidebar">
       <div className="week-selector">
         <label>Week Of </label>
-        <input 
-          type="date" 
-          setdate={getMondayOfCurrentWeek()} 
-          onChange={e => handleDateSelection(e, setSelectedDateOfMonday)} 
+        <input
+          type="date"
+          setdate={getMondayOfCurrentWeek()}
+          onChange={e => handleDateSelection(e, setSelectedDateOfMonday)}
         />
       </div>
 
@@ -83,7 +80,7 @@ function DayPickerSidebar({ selectedDay, setSelectedDay, setSelectedDateOfMonday
             <div className="sidebar-info">
               <span className="day-name">{day}</span>
               <span className="day-total">
-                {timesheetData[day].reduce((sum, t) => 
+                {timesheetData[day].reduce((sum, t) =>
                   sum + Number(t.hours || 0), 0)}h
               </span>
             </div>
@@ -100,7 +97,7 @@ function DayPickerSidebar({ selectedDay, setSelectedDay, setSelectedDateOfMonday
   );
 }
 
-function TaskDetailsArea({ timesheetData, setTimesheetData, selectedDay, selectedDateOfMonday, addTask }) {
+function TaskDetailsArea({ timesheetData, setTimesheetData, selectedDay, selectedDateOfMonday, addTask, projects }) {
 
   console.log(selectedDay);
 
@@ -123,22 +120,14 @@ function TaskDetailsArea({ timesheetData, setTimesheetData, selectedDay, selecte
         <div key={entry.id} className="task-row">
           {/* PROJECT SELECT */}
           <select
+            className="task-row-select"
             value={entry.projectId || ''}
-            onChange={(e) =>
-              handleTimeEntryChange(
-                'projectId',
-                e,
-                index,
-                selectedDay,
-                timesheetData,
-                setTimesheetData
-              )
-            }
+            onChange={(e) => handleTimeEntryChange('projectId', e, index, selectedDay, timesheetData, setTimesheetData)}
           >
             <option value="">Select Project</option>
-            {getProjects().map(p => (
-              <option key={p.id} value={p.id}>
-                {p.id} ({p.name})
+            {projects.map(p => (
+              <option key={p.projectId} value={p.projectId}>
+                {p.projectId} ({p.projectName})
               </option>
             ))}
           </select>
@@ -147,21 +136,12 @@ function TaskDetailsArea({ timesheetData, setTimesheetData, selectedDay, selecte
           <select
             value={entry.taskId || ''}
             disabled={!entry.projectId}
-            onChange={(e) =>
-              handleTimeEntryChange(
-                'taskId',
-                e,
-                index,
-                selectedDay,
-                timesheetData,
-                setTimesheetData
-              )
-            }
+            onChange={(e) => handleTimeEntryChange('taskId', e, index, selectedDay, timesheetData, setTimesheetData)}
           >
             <option value="">Select Task</option>
-            {getTasks({ projectId: entry.projectId }).map(t => (
-              <option key={t.id} value={t.id}>
-                {t.id} ({t.name})
+            {getTasksForProject(projects, entry.projectId).map(t => (
+              <option key={t.taskId} value={t.taskId}>
+                {t.taskId} ({t.taskName})
               </option>
             ))}
           </select>
@@ -171,32 +151,14 @@ function TaskDetailsArea({ timesheetData, setTimesheetData, selectedDay, selecte
             type="number"
             value={entry.hours || ''}
             name="hours"
-            onChange={(e) =>
-              handleTimeEntryChange(
-                'hours',
-                e,
-                index,
-                selectedDay,
-                timesheetData,
-                setTimesheetData
-              )
-            }
+            onChange={(e) =>handleTimeEntryChange('hours', e, index, selectedDay, timesheetData, setTimesheetData)}
             className="hrs-input"
           />
           <input
             type="text"
             value={entry.notes || ''}
             name="notes"
-            onChange={(e) =>
-              handleTimeEntryChange(
-                'notes',
-                e,
-                index,
-                selectedDay,
-                timesheetData,
-                setTimesheetData
-              )
-            }
+            onChange={(e) =>handleTimeEntryChange('notes',e,index,selectedDay,timesheetData,setTimesheetData)}
             className="note-input"
           />
         </div>
@@ -215,7 +177,7 @@ function TaskDetailsArea({ timesheetData, setTimesheetData, selectedDay, selecte
 }
 
 
-export default function TimesheetPage() {
+export default function TimesheetPage({ projects, setProjects }) {
 
   // Date of year selected
   const [selectedDateOfMonday, setSelectedDateOfMonday] = useState(getMondayOfCurrentWeek());
@@ -243,7 +205,7 @@ export default function TimesheetPage() {
     }));
   };
 
-  
+
 
   return (
     <div className="container">
@@ -262,6 +224,7 @@ export default function TimesheetPage() {
         selectedDay={selectedDay}
         selectedDateOfMonday={selectedDateOfMonday}
         addTask={addTask}
+        projects={projects}
       />
     </div>
   );

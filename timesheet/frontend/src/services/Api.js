@@ -1,7 +1,7 @@
 
 import {extractIdFromIdNameTag } from '../components/Utils';
 
-
+/*
 export const projects = [
     { id: 'ABC123', name: 'Project Alpha', description: 'Description for Project Alpha' },
     { id: 'DEF456', name: 'Project Beta', description: 'Description for Project Beta' },
@@ -23,6 +23,7 @@ export const tasks = [
     { id: 'TAS010', projectId: 'JKL012', name: 'Security Audit', description: 'Conduct security vulnerability assessment' },
     { id: 'TAS011', projectId: 'MNO345', name: 'Infrastructure Setup', description: 'Configure cloud infrastructure' },
 ];
+*/
 
 export const timeEntries = [
     { projectId: 'ABC123', taskId: 'TAS001', date: '2026-01-19', hours: 2, notes: 'Wireframes' },
@@ -50,11 +51,11 @@ export const timeEntries = [
     { projectId: 'DEF456', taskId: 'TAS002', date: '2026-02-10', hours: 4, notes: 'Deployment preparation' },
 ];
 
-
+/*
 export function getTasks(task) {
     return tasks.filter(t => t.projectId === task.projectId);
 }
-
+*/
 
 /**
  * Retrieves time entries for a specified week.

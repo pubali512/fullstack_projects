@@ -4,7 +4,15 @@ import '../styles/Common.css';
 import '../styles/Projects.css'
 
 // Import mock data or API services as needed
-import { createProject, createTask, updateProject, updateTask } from '../services/Api';
+import {AlertPopup} from '../components/UIComponents';
+
+import { 
+  createProject, 
+  createTask, 
+  updateProject, 
+  updateTask 
+} from '../services/Api';
+
 import {
   extractIdFromIdNameTag,
   getTasksForProject,
@@ -177,7 +185,7 @@ function updateProjectsState(formName, formData, projects, setProjects) {
 }
 
 
-async function handleSubmit(formName, e, formData, projects, setProjects) {
+async function handleSubmit(formName, e, formData, projects, setProjects, showAlert) {
   console.log(`Submitting form: ${formName}`, formData[formName]);
 
   let response = null;
@@ -199,12 +207,15 @@ async function handleSubmit(formName, e, formData, projects, setProjects) {
       console.error('Unknown form submission:', formName);
   }
 
+
+  showAlert(response.message || 'Operation completed successfully');
   console.log('API Response:', response);
 
   updateProjectsState(formName, formData, projects, setProjects);
 }
 
-function CreateProjectForm({ projects, setProjects, formData, setFormData }) {
+
+function CreateProjectForm({ projects, setProjects, formData, setFormData, showAlert }) {
 
   return (
     <>
@@ -240,7 +251,7 @@ function CreateProjectForm({ projects, setProjects, formData, setFormData }) {
         </div>
         <button
           className="apply-button"
-          onClick={e => handleSubmit('create_project', e, formData, projects, setProjects)}
+          onClick={e => handleSubmit('create_project', e, formData, projects, setProjects, showAlert)}
         >
           Apply
         </button>
@@ -249,7 +260,7 @@ function CreateProjectForm({ projects, setProjects, formData, setFormData }) {
   );
 }
 
-function CreateTaskForm({ projects, setProjects, formData, setFormData }) {
+function CreateTaskForm({ projects, setProjects, formData, setFormData, showAlert }) {
   return (
     <>
       <div className="form-container">
@@ -294,7 +305,7 @@ function CreateTaskForm({ projects, setProjects, formData, setFormData }) {
         </div>
         <button
           className="apply-button"
-          onClick={e => handleSubmit('create_task', e, formData, projects, setProjects)}
+          onClick={e => handleSubmit('create_task', e, formData, projects, setProjects, showAlert)}
         >
           Apply
         </button>
@@ -304,7 +315,7 @@ function CreateTaskForm({ projects, setProjects, formData, setFormData }) {
   );
 }
 
-function EditProjectForm({ projects, setProjects, formData, setFormData }) {
+function EditProjectForm({ projects, setProjects, formData, setFormData, showAlert }) {
   return (
     <>
       <div className='form-container'>
@@ -347,7 +358,7 @@ function EditProjectForm({ projects, setProjects, formData, setFormData }) {
 
         <button
           className="apply-button"
-          onClick={e => handleSubmit('edit_project', e, formData, projects, setProjects)}
+          onClick={e => handleSubmit('edit_project', e, formData, projects, setProjects, showAlert)}
         >
           Apply
         </button>
@@ -356,7 +367,7 @@ function EditProjectForm({ projects, setProjects, formData, setFormData }) {
   );
 }
 
-function EditTaskForm({ projects, setProjects, formData, setFormData }) {
+function EditTaskForm({ projects, setProjects, formData, setFormData, showAlert }) {
   return (
     <>
       <div className='form-container'>
@@ -412,7 +423,7 @@ function EditTaskForm({ projects, setProjects, formData, setFormData }) {
 
         <button
           className="apply-button"
-          onClick={e => handleSubmit('edit_task', e, formData, projects, setProjects)}
+          onClick={e => handleSubmit('edit_task', e, formData, projects, setProjects, showAlert)}
         >
           Apply
         </button>
@@ -423,19 +434,19 @@ function EditTaskForm({ projects, setProjects, formData, setFormData }) {
 }
 
 
-function RenderForm({ mode, formData, setFormData, projects, setProjects }) {
+function RenderForm({ mode, formData, setFormData, projects, setProjects, showAlert }) {
   console.log(`Rendering form for mode: ${mode}`);
   console.log(formData);
 
   switch (mode) {
     case 'create_project':
-      return <CreateProjectForm projects={projects} setProjects={setProjects} formData={formData} setFormData={setFormData} />;
+      return <CreateProjectForm projects={projects} setProjects={setProjects} formData={formData} setFormData={setFormData} showAlert={showAlert} />;
     case 'create_task':
-      return <CreateTaskForm projects={projects} setProjects={setProjects} formData={formData} setFormData={setFormData} />;
+      return <CreateTaskForm projects={projects} setProjects={setProjects} formData={formData} setFormData={setFormData} showAlert={showAlert} />;
     case 'edit_project':
-      return <EditProjectForm projects={projects} setProjects={setProjects} formData={formData} setFormData={setFormData} />;
+      return <EditProjectForm projects={projects} setProjects={setProjects} formData={formData} setFormData={setFormData} showAlert={showAlert} />;
     case 'edit_task':
-      return <EditTaskForm projects={projects} setProjects={setProjects} formData={formData} setFormData={setFormData} />;
+      return <EditTaskForm projects={projects} setProjects={setProjects} formData={formData} setFormData={setFormData} showAlert={showAlert} />;
     default: return null;
   }
 }
@@ -467,10 +478,17 @@ function ModePickerSidebar({ setMode }) {
   );
 }
 
+
+
 export default function ProjectsPage({ projects, setProjects }) {
 
   const [mode, setMode] = useState('create_project');
   const [formData, setFormData] = useState(FormState);
+
+  const [alertMsg, setAlertMsg] = useState("");
+  function showAlert(msg) {
+    setAlertMsg(msg);
+  }
 
 
   return (
@@ -480,8 +498,19 @@ export default function ProjectsPage({ projects, setProjects }) {
 
       {/* RIGHT PANEL: FORM CONTEXT */}
       <main className='main-form-area'>
-        <RenderForm mode={mode} formData={formData} setFormData={setFormData} projects={projects} setProjects={setProjects} />
+        <RenderForm mode={mode}
+          formData={formData}
+          setFormData={setFormData}
+          projects={projects}
+          setProjects={setProjects} 
+          showAlert={showAlert}
+          />
       </main>
+
+      <AlertPopup
+        message={alertMsg}
+        onClose={() => setAlertMsg("")}
+      />
     </div>
   );
 }
