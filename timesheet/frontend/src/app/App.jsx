@@ -49,6 +49,7 @@ export default function App() {
         getProjects().then(setProjects);
     }, []);
 
+    console.log('Current Projects State:', projects);
 
     return (
         <div>
@@ -57,8 +58,8 @@ export default function App() {
                 <NavBar links={NavItems} />
                 <Routes>
                     <Route path="/" element={<DashboardPage />} />
-                    <Route path="/projects" element={<ProjectsPage projects={projects} />} />
-                    <Route path="/timesheet" element={<TimesheetPage projects={projects} />} />
+                    <Route path="/projects" element={<ProjectsPage projects={projects} setProjects={setProjects} />} />
+                    <Route path="/timesheet" element={<TimesheetPage projects={projects} setProjects={setProjects} />} />
                 </Routes>
             </BrowserRouter>
         </div>

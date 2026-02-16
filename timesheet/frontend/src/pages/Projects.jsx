@@ -4,7 +4,12 @@ import '../styles/Common.css';
 import '../styles/Projects.css'
 
 // Import mock data or API services as needed
-import { /*projects,*/ tasks, getTasks,  createProject, createTask, updateProject } from '../services/Api';
+import { createProject, createTask, updateProject, updateTask } from '../services/Api';
+import {
+  extractIdFromIdNameTag,
+  getTasksForProject,
+  getTasksForProjectAndTaskId
+} from '../components/Utils';
 
 
 const FormState = {
@@ -33,11 +38,12 @@ const FormState = {
 };
 
 
+
+
 // A truly generic handler
 function handleGenericInputChange(formName, e, setFormData) {
 
   const { name, value } = e.target;
-  
   console.log(`Form: ${formName}, Field: ${name}, Value: ${value}`);
   setFormData(prev => ({
     ...prev,
@@ -49,19 +55,129 @@ function handleGenericInputChange(formName, e, setFormData) {
 };
 
 
-function taskOptions(formData) {
+function getNewProjectName(formData, projects, projectId) {
+  const existingProject = projects.find(p => p.projectId === projectId);
+  return formData.edit_project.projectName ||
+    (existingProject ? existingProject.projectName : '');
+}
 
-  console.log('Generating task options for project ID:', formData.edit_task.selectProjectId); 
-  console.log('Selected tasks:', getTasks({ projectId: formData.edit_task.selectProjectId }));
+function getNewProjectDescription(formData, projects, projectId) {
+  const existingProject = projects.find(p => p.projectId === projectId);
+  return formData.edit_project.description ||
+    (existingProject ? existingProject.description : '');
+}
 
-  return formData.edit_task.selectProjectId && tasks
-    .filter(task => task.projectId === formData.edit_task.selectProjectId)
-    .map(task => (
-      <option key={task.id} value={task.id}>{task.name}</option>
+function getNewTaskName(formData, projects, projectId, taskId) {
+  const task = getTasksForProjectAndTaskId(projects, projectId, taskId);
+  return formData.edit_task.taskName ||
+    (task ? task.taskName : '');
+}
+
+function getNewTaskDescription(formData, projects, projectId, taskId) {
+  const task = getTasksForProjectAndTaskId(projects, projectId, taskId);
+  return formData.edit_task.description ||
+    (task ? task.description : '');
+}
+  
+
+function generateTaskOptions(formData, projects) {
+
+  const extractedProjectId = extractIdFromIdNameTag(formData.edit_task.projectId);
+  console.log('Generating task options for project ID:', extractedProjectId);
+
+  return formData.edit_task.projectId &&
+    getTasksForProject(projects, extractedProjectId).
+    map(task => (
+      <option key={task.taskId} value={task.taskId}>
+        {task.taskId} ({task.taskName})
+      </option>
     ));
 }
 
-async function handleSubmit(formName, e, formData) {
+function updateProjectsState(formName, formData, projects, setProjects) {
+
+  const data = formData[formName];
+
+  switch (formName) {
+    case 'create_project':
+      {
+        const updatedData = {
+          projectId: data.projectId,
+          projectName: data.projectName,
+          description: data.description,
+          tasks: []
+        };
+        setProjects(prev => [...prev, updatedData]);
+      }
+      break;
+
+    case 'create_task':
+      {
+        const updatedData = {
+          taskId: data.taskId,
+          taskName: data.taskName,
+          description: data.description,
+          note: data.note,
+          employeeName: '',
+          timesheets: [],
+        };
+        const projectId = extractIdFromIdNameTag(data.projectId);
+        setProjects(prev => prev.map(p => {
+          if (p.projectId === projectId) {
+            return {
+              ...p,
+              tasks: [...(p.tasks || []), updatedData]
+            };
+          }
+          return p;
+        }));
+      }
+      break;
+
+    case 'edit_project':
+      {
+        setProjects(prev => prev.map(p => {
+          if (p.projectId === extractIdFromIdNameTag(data.projectId)) {
+            return {
+              ...p,
+              projectName: data.projectName || p.projectName,
+              description: data.description || p.description,
+            };
+          }
+          return p;
+        }));
+      }
+      break;
+
+    case 'edit_task':
+      { 
+        setProjects(prev => prev.map(p => {
+          if (p.projectId === extractIdFromIdNameTag(data.projectId)) {
+            return {
+              ...p,
+              tasks: p.tasks.map(t => {
+                if (t.taskId === extractIdFromIdNameTag(data.taskId)) {
+                  return {
+                    ...t,
+                    taskName: data.taskName || t.taskName,
+                    description: data.description || t.description,
+                  };
+                }
+                return t;
+              })
+            };
+          }
+          return p;
+        }));
+      }
+      break;
+  }
+
+  console.log('Updated Projects State:', projects);
+}
+
+
+async function handleSubmit(formName, e, formData, projects, setProjects) {
   console.log(`Submitting form: ${formName}`, formData[formName]);
 
   let response = null;
@@ -77,22 +193,23 @@ async function handleSubmit(formName, e, formData) {
       response = await updateProject(formData[formName]);
       break;
     case 'edit_task':
-      // response = await updateTask(formData[formName]);
+      response = await updateTask(formData[formName]);
       break;
     default:
       console.error('Unknown form submission:', formName);
   }
 
   console.log('API Response:', response);
+
+  updateProjectsState(formName, formData, projects, setProjects);
 }
 
-function CreateProjectForm({ formData, setFormData }) {
+function CreateProjectForm({ projects, setProjects, formData, setFormData }) {
 
   return (
     <>
       <div className="form-container">
         <h3 className='form-header'>Create New Project</h3>
-        {/*<hr style={{border: '1px solid #ccc', margin: '10px 0'}}></hr>*/}
         <div className="form-grid">
           <label>Project Name</label>
           <input
@@ -123,7 +240,7 @@ function CreateProjectForm({ formData, setFormData }) {
         </div>
         <button
           className="apply-button"
-          onClick={e => handleSubmit('create_project', e, formData)}
+          onClick={e => handleSubmit('create_project', e, formData, projects, setProjects)}
         >
           Apply
         </button>
@@ -132,7 +249,7 @@ function CreateProjectForm({ formData, setFormData }) {
   );
 }
 
-function CreateTaskForm({ projects, formData, setFormData }) {
+function CreateTaskForm({ projects, setProjects, formData, setFormData }) {
   return (
     <>
       <div className="form-container">
@@ -177,7 +294,7 @@ function CreateTaskForm({ projects, formData, setFormData }) {
         </div>
         <button
           className="apply-button"
-          onClick={e => handleSubmit('create_task', e, formData)}
+          onClick={e => handleSubmit('create_task', e, formData, projects, setProjects)}
         >
           Apply
         </button>
@@ -187,13 +304,13 @@ function CreateTaskForm({ projects, formData, setFormData }) {
   );
 }
 
-function EditProjectForm({ projects, formData, setFormData}) {
+function EditProjectForm({ projects, setProjects, formData, setFormData }) {
   return (
     <>
       <div className='form-container'>
         <h3 className='form-header'>Edit Project</h3>
         <div className="form-grid">
-          <label>Project ID</label>
+          <label>Project</label>
           <select
             className="input-field-small"
             name="projectId"
@@ -210,7 +327,9 @@ function EditProjectForm({ projects, formData, setFormData}) {
           <input
             type="text"
             className="input-field-small"
-            placeholder={formData.edit_project.projectName || "New Project Name"}
+            placeholder={getNewProjectName(formData, 
+                projects, 
+                extractIdFromIdNameTag(formData.edit_project.projectId)) || "New Project Name"}
             name="projectName"
             onChange={e => handleGenericInputChange('edit_project', e, setFormData)}
           />
@@ -218,7 +337,9 @@ function EditProjectForm({ projects, formData, setFormData}) {
           <label>Description</label>
           <textarea
             className="input-textarea"
-            placeholder={formData.edit_project.description || "New Description"}
+            placeholder={getNewProjectDescription(formData, 
+                projects, 
+                extractIdFromIdNameTag(formData.edit_project.projectId)) || "New Description"}
             name="description"
             onChange={e => handleGenericInputChange('edit_project', e, setFormData)}
           ></textarea>
@@ -226,7 +347,7 @@ function EditProjectForm({ projects, formData, setFormData}) {
 
         <button
           className="apply-button"
-          onClick={e => handleSubmit('edit_project', e, formData)}
+          onClick={e => handleSubmit('edit_project', e, formData, projects, setProjects)}
         >
           Apply
         </button>
@@ -235,7 +356,7 @@ function EditProjectForm({ projects, formData, setFormData}) {
   );
 }
 
-function EditTaskForm({ projects, formData, setFormData }) {
+function EditTaskForm({ projects, setProjects, formData, setFormData }) {
   return (
     <>
       <div className='form-container'>
@@ -244,30 +365,34 @@ function EditTaskForm({ projects, formData, setFormData }) {
           <label>Project</label>
           <select
             className="input-field-small"
-            name="selectProjectId"
-            value={formData.edit_task.selectProjectId}
+            name="projectId"
+            value={formData.edit_task.projectId}
             onChange={e => handleGenericInputChange('edit_task', e, setFormData)}
           >
             <option>Select Project...</option>
             {projects.map(p => <option key={p.projectId}>{p.projectId} ({p.projectName})</option>)}
           </select>
 
-          <label>Task ID</label>
+          <label>Task</label>
           <select
             className="input-field-small"
-            name="selectTaskId"
-            value={formData.edit_task.selectTaskId}
+            name="taskId"
+            value={formData.edit_task.taskId}
             onChange={e => handleGenericInputChange('edit_task', e, setFormData)}
           >
             <option>Select Task...</option>
-            {taskOptions(formData)}
+            {generateTaskOptions(formData, projects)} 
           </select>
 
           <label>Task Name</label>
           <input
             type="text"
             className="input-field-small"
-            placeholder={formData.edit_task.taskName || "New Task Name"}
+            placeholder={
+              getNewTaskName(formData, 
+                projects, 
+                extractIdFromIdNameTag(formData.edit_task.projectId), 
+                extractIdFromIdNameTag(formData.edit_task.taskId)) || "New Task Name"}
             name="taskName"
             onChange={e => handleGenericInputChange('edit_task', e, setFormData)}
           />
@@ -275,7 +400,10 @@ function EditTaskForm({ projects, formData, setFormData }) {
           <label>Description</label>
           <textarea
             className="input-textarea"
-            placeholder={formData.edit_task.description || "New Description"}
+            placeholder={getNewTaskDescription(formData, 
+              projects, 
+              extractIdFromIdNameTag(formData.edit_task.projectId), 
+              extractIdFromIdNameTag(formData.edit_task.taskId)) || "New Description"}
             name="description"
             onChange={e => handleGenericInputChange('edit_task', e, setFormData)}
           ></textarea>
@@ -284,7 +412,7 @@ function EditTaskForm({ projects, formData, setFormData }) {
 
         <button
           className="apply-button"
-          onClick={e => handleSubmit('edit_task', e, formData)}
+          onClick={e => handleSubmit('edit_task', e, formData, projects, setProjects)}
         >
           Apply
         </button>
@@ -295,19 +423,19 @@ function EditTaskForm({ projects, formData, setFormData }) {
 }
 
 
-function RenderForm({ mode, formData, setFormData, projects }) {
+function RenderForm({ mode, formData, setFormData, projects, setProjects }) {
   console.log(`Rendering form for mode: ${mode}`);
   console.log(formData);
 
   switch (mode) {
     case 'create_project':
-      return <CreateProjectForm formData={formData} setFormData={setFormData} />;
+      return <CreateProjectForm projects={projects} setProjects={setProjects} formData={formData} setFormData={setFormData} />;
     case 'create_task':
-      return <CreateTaskForm  projects={projects} formData={formData} setFormData={setFormData} />;
+      return <CreateTaskForm projects={projects} setProjects={setProjects} formData={formData} setFormData={setFormData} />;
     case 'edit_project':
-      return <EditProjectForm projects={projects} formData={formData} setFormData={setFormData} />;
+      return <EditProjectForm projects={projects} setProjects={setProjects} formData={formData} setFormData={setFormData} />;
     case 'edit_task':
-      return <EditTaskForm projects={projects} formData={formData} setFormData={setFormData} />;
+      return <EditTaskForm projects={projects} setProjects={setProjects} formData={formData} setFormData={setFormData} />;
     default: return null;
   }
 }
@@ -339,7 +467,7 @@ function ModePickerSidebar({ setMode }) {
   );
 }
 
-export default function ProjectsPage({ projects }) {
+export default function ProjectsPage({ projects, setProjects }) {
 
   const [mode, setMode] = useState('create_project');
   const [formData, setFormData] = useState(FormState);
@@ -352,7 +480,7 @@ export default function ProjectsPage({ projects }) {
 
       {/* RIGHT PANEL: FORM CONTEXT */}
       <main className='main-form-area'>
-        <RenderForm mode={mode} formData={formData} setFormData={setFormData} projects={projects} />
+        <RenderForm mode={mode} formData={formData} setFormData={setFormData} projects={projects} setProjects={setProjects} />
       </main>
     </div>
   );
