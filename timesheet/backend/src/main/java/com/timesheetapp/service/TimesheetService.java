@@ -20,7 +20,7 @@ public class TimesheetService {
     private final TaskRepository taskRepo;
     private final TimesheetRepository timesheetRepo;
 
-    // --- PROJECT OPERATIONS ---
+    // --- PROJECT & TASK OPERATIONS ---
 
     public Project saveProject(Project project) {
         return projectRepo.save(project);
@@ -30,61 +30,57 @@ public class TimesheetService {
         return projectRepo.findAll();
     }
 
-    public Optional<Project> getProjectById(String id) {
-        return projectRepo.findById(id);
-    }
-
-    // --- TASK OPERATIONS ---
-
     @Transactional
     public Task addTaskToProject(String projectId, Task task) {
-        // Find the parent Project
         Project project = projectRepo.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Cannot add task: Project " + projectId + " not found"));
-
-        // Establish the bidirectional link
-        task.setProject(project);
-
-        // Save the task
-        return taskRepo.save(task);
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+        task.setProject(project);        // Establish bidirectional link
+        return taskRepo.save(task);      // Save Task
     }
 
     public List<Task> getTasksByProject(String projectId) {
-
+        // This allows the Controller to fetch tasks for the dropdown menu
         return taskRepo.findByProject_ProjectId(projectId);
     }
 
-    // --- TIMESHEET OPERATIONS ---
+    // --- TIMESHEET OPERATIONS (THE UPSERT STRATEGY) ---
 
+    /**
+     * Implementation of the Upsert Strategy:
+     * 1. Checks if a record exists for the Project + Task + Date.
+     * 2. If yes, updates the existing record.
+     * 3. If no, creates a new one.
+     */
     @Transactional
-    public Timesheet logTime(String taskId, Timesheet entry) {
-        // Find the parent Task
-        Task task = taskRepo.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Cannot log time: Task " + taskId + " not found"));
+    public Timesheet upsertTimesheet(Timesheet entry) {
+        // Search for existing record by the unique composite key
+        Optional<Timesheet> existing = timesheetRepo.findByProjectIdAndTaskIdAndDay(
+                entry.getProjectId(),
+                entry.getTaskId(),
+                entry.getDay()
+        );
 
-        // Link the timesheet entry to the specific task
-        entry.setTask(task);
-
-        return timesheetRepo.save(entry);
-    }
-
-    public List<Timesheet> getTimesheetsByTask(String taskId) {
-        return timesheetRepo.findByTaskId(taskId);
+        if (existing.isPresent()) {
+            // UPDATE logic
+            Timesheet existingRecord = existing.get();
+            existingRecord.setHours(entry.getHours());
+            existingRecord.setEmployeeName(entry.getEmployeeName());
+            existingRecord.setNote(entry.getNote());
+            return timesheetRepo.save(existingRecord);
+        } else {
+            // INSERT logic
+            return timesheetRepo.save(entry);
+        }
     }
 
     // --- AGGREGATION LOGIC ---
 
     /**
-     * Calculates the total hours logged for an entire project
-     * by summing all timesheets across all tasks.
+     * Calculates total hours for a project.
      **/
     public Double calculateTotalProjectHours(String projectId) {
-        List<Task> tasks = taskRepo.findByProject_ProjectId(projectId);
-
-        return tasks.stream()
-                .flatMap(task -> task.getTimesheets().stream())
-                .mapToDouble(Timesheet::getHours)
-                .sum();
+        Double total = timesheetRepo.sumHoursByProjectId(projectId);
+        return (total != null) ? total : 0.0;           // Return 0 if no hours found
     }
 
     /**

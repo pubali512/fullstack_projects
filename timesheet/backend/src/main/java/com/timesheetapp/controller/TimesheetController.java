@@ -21,6 +21,9 @@ public class TimesheetController {
     private final TimesheetService service;
 
     // --- PROJECT ENDPOINTS ---
+    /**
+     * This manage the master project list
+     **/
 
     @PostMapping("/projects")
     public ResponseEntity<Project> createProject(@RequestBody Project project) {
@@ -32,12 +35,6 @@ public class TimesheetController {
         return service.getAllProjects();
     }
 
-    @GetMapping("/projects/{id}")
-    public ResponseEntity<Project> getProjectById(@PathVariable String id) {
-        return service.getProjectById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
 
     // --- TASK ENDPOINTS ---
 
@@ -53,24 +50,30 @@ public class TimesheetController {
 
     // --- TIMESHEET ENDPOINTS ---
 
-    @PostMapping("/tasks/{taskId}/timesheets")
-    public ResponseEntity<Timesheet> logTime(@PathVariable String taskId, @RequestBody Timesheet entry) {
-        return ResponseEntity.ok(service.logTime(taskId, entry));
+    /**
+     * POST /api/timesheets
+     * This handles both INSERT and UPDATE (Upsert).
+     * The JSON body now contains projectId and taskId.
+     */
+    @PostMapping("/timesheets")
+    public ResponseEntity<Timesheet> logTime(@RequestBody Timesheet entry) {
+        return ResponseEntity.ok(service.upsertTimesheet(entry));
     }
 
-    @GetMapping("/tasks/{taskId}/timesheets")
-    public List<Timesheet> getTimesheetsByTask(@PathVariable String taskId) {
-        // Make sure this method exists in your TimesheetService!
-        return service.getTimesheetsByTask(taskId);
-    }
-
+    /**
+     * GET /api/projects/{projectId}/total-hours
+     * Uses the new optimized SQL SUM query.
+     */
     @GetMapping("/projects/{projectId}/total-hours")
     public ResponseEntity<Double> getTotalProjectHours(@PathVariable String projectId) {
-        // This calls the logic you already wrote!
         Double total = service.calculateTotalProjectHours(projectId);
         return ResponseEntity.ok(total);
     }
 
+    /**
+     * GET /api/summary
+     * Fetches grouped totals by taskId for a date range.
+     */
     @GetMapping("/summary")
     public List<TaskTotalDTO> getSummary(
             @RequestParam("start") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,

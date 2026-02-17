@@ -9,20 +9,26 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TimesheetRepository extends JpaRepository<Timesheet, Long> {
 
-    // Using @Query tells Spring exactly which field to look at
-    // "t.task.id" means: look at the timesheet (t), find its task, then get that task's id.
-    @Query("SELECT t FROM Timesheet t WHERE t.task.taskId = :taskId")
-    List<Timesheet> findByTaskId(@Param("taskId") String taskId);
+    //  The unique key check
+    Optional<Timesheet> findByProjectIdAndTaskIdAndDay(String projectId, String taskId, LocalDate day);
 
-    // New query for the total hours report
-    @Query("SELECT new com.timesheetapp.TaskTotalDTO(t.task.taskId, SUM(t.hours)) " +
+    // Total hours for one specific project
+    @Query("SELECT SUM(t.hours) FROM Timesheet t WHERE t.projectId = :projectId")
+    Double sumHoursByProjectId(@Param("projectId") String projectId);
+
+    // REQUIRED for the Summary Report (The math/aggregation)
+    @Query("SELECT new com.timesheetapp.TaskTotalDTO(t.taskId, SUM(t.hours)) " +
             "FROM Timesheet t " +
             "WHERE t.day BETWEEN :startDate AND :endDate " +
-            "GROUP BY t.task.taskId")
+            "GROUP BY t.taskId")
     List<TaskTotalDTO> getTotalHoursByTask(@Param("startDate") LocalDate startDate,
                                            @Param("endDate") LocalDate endDate);
+
+    // OPTIONAL: Better for performance: Finds all entries for a task within a specific project
+    // List<Timesheet> findByProjectIdAndTaskId(String projectId, String taskId);
 }

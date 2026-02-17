@@ -25,8 +25,4 @@ public class Task {
     @JoinColumn(name = "project_id")                // This stores the String ID from Project.java
     private Project project;
 
-    // RELATIONSHIP 2: Linking forward to the Timesheet entries
-    @JsonManagedReference // This is the "Parent" side that will be shown in JSON
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Timesheet> timesheets;
 }
