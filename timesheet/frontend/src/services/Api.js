@@ -1,4 +1,7 @@
 
+import {extractIdFromIdNameTag } from '../components/Utils';
+
+/*
 export const projects = [
     { id: 'ABC123', name: 'Project Alpha', description: 'Description for Project Alpha' },
     { id: 'DEF456', name: 'Project Beta', description: 'Description for Project Beta' },
@@ -20,6 +23,7 @@ export const tasks = [
     { id: 'TAS010', projectId: 'JKL012', name: 'Security Audit', description: 'Conduct security vulnerability assessment' },
     { id: 'TAS011', projectId: 'MNO345', name: 'Infrastructure Setup', description: 'Configure cloud infrastructure' },
 ];
+*/
 
 export const timeEntries = [
     { projectId: 'ABC123', taskId: 'TAS001', date: '2026-01-19', hours: 2, notes: 'Wireframes' },
@@ -48,14 +52,10 @@ export const timeEntries = [
 ];
 
 /*
-export function getProjects() {
-    return projects; 
-}
-*/ 
-
 export function getTasks(task) {
     return tasks.filter(t => t.projectId === task.projectId);
 }
+*/
 
 /**
  * Retrieves time entries for a specified week.
@@ -94,7 +94,7 @@ export async function createProject(entry) {
 
 export async function updateProject(entry) {
 
-  const projectId = entry.projectId.split(' (')[0]; 
+  const projectId = extractIdFromIdNameTag(entry.projectId);
   let data = {projectId: projectId, 
     projectName: entry.projectName, 
     description: entry.description};
@@ -107,18 +107,10 @@ export async function updateProject(entry) {
   return res.json(); 
 }
 
-export async function getProjects() {
-  const res = await fetch(API_PROJECTS);
-  if (!res.ok) {
-    throw new Error('Network response was not ok');
-  }
-  return res.json();
-}
-
 export async function createTask(entry) {
 
   // Extract projectId from the format "Project Name (ProjectID)"
-  const projectId = entry.projectId.split(' (')[0]; 
+  const projectId = extractIdFromIdNameTag(entry.projectId);
   const API_TASKS = `http://localhost:8080/api/projects/${projectId}/tasks`;
 
   const data = {taskId: entry.taskId, 
@@ -133,4 +125,34 @@ export async function createTask(entry) {
     body: JSON.stringify(data),
   });
   return res.json(); 
+}
+
+export async function updateTask(entry) {
+
+  // Extract projectId from the format "Project Name (ProjectID)"
+  const projectId = extractIdFromIdNameTag(entry.projectId);
+  const API_TASKS = `http://localhost:8080/api/projects/${projectId}/tasks`;
+
+  const data = {taskId: extractIdFromIdNameTag(entry.taskId), 
+    projectId: projectId,
+    taskName: entry.taskName, 
+    description: entry.description};
+
+  console.log(`Creating task for project ${projectId} with data:`, data);
+
+  const res = await fetch(API_TASKS, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json(); 
+}
+
+
+export async function getProjects() {
+  const res = await fetch(API_PROJECTS);
+  if (!res.ok) {
+    throw new Error('Network response was not ok');
+  }
+  return res.json();
 }

@@ -1,3 +1,24 @@
+/**
+ * Utilities for extracting tasks from a project
+ */
+
+export function getTasksForProject(projects, projectId) {
+  const project = projects.find(p => p.projectId === projectId);
+  return project ? project.tasks || [] : [];
+}
+
+export function getTasksForProjectAndTaskId(projects, projectId, taskId) {
+  const tasks = getTasksForProject(projects, projectId);
+  return tasks.find(t => t.taskId === taskId);
+}
+
+/**
+ * Utility function to extract project ID from a string in the format <projectID> (<projectName>) 
+ */
+
+export function extractIdFromIdNameTag(projectString) {
+    return projectString.split(' (')[0];
+}
 
 
 /**
