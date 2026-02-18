@@ -2,7 +2,15 @@ import React, { useState } from 'react';
 
 import '../styles/Common.css';
 import '../styles/Timesheet.css';
-import { getMondayOfWeek, getMondayOfCurrentWeek, getTasksForProject, getTasksForProjectAndTaskId } from '../components/Utils';
+
+import {
+  getMondayOfWeek,
+  getMondayOfCurrentWeek,
+  getTasksForProject,
+  getTasksForProjectAndTaskId
+} from '../components/Utils';
+
+import { submitTimesheet } from '../services/Api';
 
 function convertDayToDate(selectedDateOfMonday, dayName) {
   const dayOffsets = {
@@ -20,6 +28,28 @@ function convertDayToDate(selectedDateOfMonday, dayName) {
   const convDate = new Date(selectedDateOfMonday);
   convDate.setDate(convDate.getDate() + dayOffsets[dayName]);
   return convDate.toISOString().split('T')[0];
+}
+
+function flattenTimesheet(timesheet, selectedDateOfMonday) {
+  return Object.entries(timesheet).flatMap(([day, entries]) =>
+    entries.map(entry => ({
+      day: convertDayToDate(selectedDateOfMonday, day),
+      ...entry
+    }))
+  );
+}
+
+async function handleApplyTimesheet(selectedDateOfMonday, timesheetData) {
+  const flattenedData = flattenTimesheet(timesheetData, selectedDateOfMonday);
+  console.log('Flattened timesheet data for submission:', flattenedData);
+
+  for (const entry of flattenedData) {
+    try {
+      const res = await submitTimesheet(entry);
+    } catch (err) {
+      console.error("Failed entry:", entry);
+    }
+  }
 }
 
 function handleDateSelection(e, setSelectedDateOfMonday) {
@@ -58,14 +88,14 @@ function handleTimeEntryChange(field, e, entryIdx, selectedDay, timesheetData, s
 }
 
 
-function DayPickerSidebar({ selectedDay, setSelectedDay, setSelectedDateOfMonday, timesheetData }) {
+function DayPickerSidebar({ selectedDay, setSelectedDay, selectedDateOfMonday, setSelectedDateOfMonday, timesheetData }) {
   return (
     <aside className="sidebar">
       <div className="week-selector">
         <label>Week Of </label>
         <input
           type="date"
-          setdate={getMondayOfCurrentWeek()}
+          value={selectedDateOfMonday}
           onChange={e => handleDateSelection(e, setSelectedDateOfMonday)}
         />
       </div>
@@ -90,7 +120,10 @@ function DayPickerSidebar({ selectedDay, setSelectedDay, setSelectedDateOfMonday
 
       <div>
         <center>
-          <button className="apply-button">Apply</button>
+          <button className="apply-button"
+            onClick={() => handleApplyTimesheet(selectedDateOfMonday, timesheetData)}>
+            Apply
+          </button>
         </center>
       </div>
     </aside>
@@ -213,6 +246,7 @@ export default function TimesheetPage({ projects, setProjects }) {
       <DayPickerSidebar
         selectedDay={selectedDay}
         setSelectedDay={setSelectedDay}
+        selectedDateOfMonday={selectedDateOfMonday}
         setSelectedDateOfMonday={setSelectedDateOfMonday}
         timesheetData={timesheetData}
       />

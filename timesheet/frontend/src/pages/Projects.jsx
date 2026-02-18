@@ -184,11 +184,57 @@ function updateProjectsState(formName, formData, projects, setProjects) {
   console.log('Updated Projects State:', projects);
 }
 
+function validateFormData(formName, formData, projects, showAlert) {
+  const data = formData[formName];
+
+  let errMsg = '';
+  switch (formName) {
+    case 'create_project':
+      if (!data.projectId || !data.projectName) {
+        errMsg = 'Project ID and Project Name are required.';
+      }
+      else if (projects.some(p => p.projectId === data.projectId)) {
+        errMsg = 'Project ID must be unique. A project with this ID already exists.';
+      }
+      break;
+
+    case 'create_task':
+      if (!data.projectId || !data.taskId || !data.taskName) {
+        errMsg = 'Project, Task ID, and Task Name are required.';
+      }
+      break;
+
+    case 'edit_project':
+      if (!data.projectId) {
+        errMsg = 'Project selection is required.';
+      }
+      break;
+
+    case 'edit_task':
+      if (!data.projectId || !data.taskId) {
+        errMsg = 'Project and Task selection are required.';
+      }
+      break;
+  }
+
+  console.log(`Validating form data for ${formName}:`, errMsg ? `Error - ${errMsg}` : 'Validation passed');
+
+  if (errMsg) {
+    showAlert(errMsg);
+    return false;
+  }
+  return true;
+}
+
 
 async function handleSubmit(formName, e, formData, projects, setProjects, showAlert) {
   console.log(`Submitting form: ${formName}`, formData[formName]);
 
   let response = null;
+
+  if (!validateFormData(formName, formData, projects, showAlert)) {
+    return;
+  }
 
   switch (formName) {
     case 'create_project':
@@ -207,10 +253,7 @@ async function handleSubmit(formName, e, formData, projects, setProjects, showAl
       console.error('Unknown form submission:', formName);
   }
 
-
-  showAlert(response.message || 'Operation completed successfully');
   console.log('API Response:', response);
-
   updateProjectsState(formName, formData, projects, setProjects);
 }
 

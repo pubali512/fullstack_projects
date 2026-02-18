@@ -156,3 +156,14 @@ export async function getProjects() {
   }
   return res.json();
 }
+
+const API_TIMESHEETS = 'http://localhost:8080/api/timesheets';
+
+export async function submitTimesheet(entry) {
+  const res = await fetch(API_TIMESHEETS, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entry),
+  });
+  return res.json();
+}
