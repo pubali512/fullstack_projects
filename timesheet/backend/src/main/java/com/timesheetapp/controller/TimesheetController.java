@@ -61,6 +61,18 @@ public class TimesheetController {
     }
 
     /**
+     * GET /api/timesheets/date/2025-12-19
+     * Returns all logs across all projects/tasks for a specific day.
+     */
+    @GetMapping("/timesheets/date/{date}")
+    public List<Timesheet> getByDate(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return service.getEntriesByDate(date);
+    }
+
+    // --- AGGREGATION / REPORTING ENDPOINTS ---
+
+    /**
      * GET /api/projects/{projectId}/total-hours
      * Uses the new optimized SQL SUM query.
      */

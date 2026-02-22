@@ -14,8 +14,15 @@ import java.util.Optional;
 @Repository
 public interface TimesheetRepository extends JpaRepository<Timesheet, Long> {
 
-    //  The unique key check
+    // --- BASIC LOOKUP QUERIES ---
+
+    //  The unique key check (Upsert Logic)
     Optional<Timesheet> findByProjectIdAndTaskIdAndDay(String projectId, String taskId, LocalDate day);
+
+    // By date endpoint
+    List<Timesheet> findByDay(LocalDate day);
+
+    // --- REPORTING & AGGREGATION QUERIES ---
 
     // Total hours for one specific project
     @Query("SELECT SUM(t.hours) FROM Timesheet t WHERE t.projectId = :projectId")

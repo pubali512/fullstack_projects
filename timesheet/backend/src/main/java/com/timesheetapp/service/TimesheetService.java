@@ -43,7 +43,7 @@ public class TimesheetService {
         return taskRepo.findByProject_ProjectId(projectId);
     }
 
-    // --- TIMESHEET OPERATIONS (THE UPSERT STRATEGY) ---
+    // --- TIMESHEET OPERATIONS ---
 
     /**
      * Implementation of the Upsert Strategy:
@@ -71,6 +71,11 @@ public class TimesheetService {
             // INSERT logic
             return timesheetRepo.save(entry);
         }
+    }
+
+    // List of all logs for a specific day
+    public List<Timesheet> getEntriesByDate(LocalDate day) {
+        return timesheetRepo.findByDay(day);
     }
 
     // --- AGGREGATION LOGIC ---
