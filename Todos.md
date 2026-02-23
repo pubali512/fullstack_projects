@@ -6,6 +6,14 @@
 
 ## Frontend 
 
+- Task and project ID should contain only characters, underscores, hyphens and digits. Before creating a new project or task, validate the ID and return an error if it contains invalid characters.
+- Generate display names for projects and tasks by combining their IDs with their names (e.g., "Project 1: Website Redesign", "Task 1: Design Homepage"). Limit them to a maximum of 30 characters for better display in the UI. If the combined name exceeds 30 characters, truncate it and add an ellipsis (e.g., "Project 1: Website Redesign..." or "Task 1: Design Homepage...").
+- Task ID need not be unique acoss projects, but should be unique within a project. Before creating a new task, check if a task with the same ID already exists within the same project and return an error if it does.
+
+
+## Testdata initialization
+- Add a script in python that adds some test data to the database for easier testing and development (e.g., a few projects, tasks, and timesheet entries)
+
 # Finance app 
 
 ## Frontend 
