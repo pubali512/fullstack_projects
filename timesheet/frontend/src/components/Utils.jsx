@@ -1,4 +1,15 @@
 /**
+ * Given project ID and project name (or task ID and task name), generate a string in the format <ID> (<Name>) 
+ * for display in the select dropdowns. Limit the name to a specified length for better display. End with "..." if truncated.
+ */
+
+export function generateIdAndNameTag(id, name, maxNameLength = 15) {
+    const truncatedName = name.length > maxNameLength ? name.substring(0, maxNameLength - 3) + '...' : name;
+    return `${id} (${truncatedName})`;
+}
+
+
+/**
  * Utilities for extracting tasks from a project
  */
 

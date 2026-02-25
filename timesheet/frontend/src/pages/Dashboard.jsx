@@ -1,12 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/Common.css';
 import '../styles/Dashboard.css'
 import '../styles/Projects.css'
 
-import { getMondayOfWeek, getSundayOfWeek, getFirstDayOfCurrMonth, getLastDayOfCurrMonth, getMondayOfCurrentWeek, getSundayOfCurrentWeek } from '../components/Utils'; 
+import {
+  getMondayOfWeek,
+  getSundayOfWeek,
+  getFirstDayOfCurrMonth,
+  getLastDayOfCurrMonth,
+  getMondayOfCurrentWeek,
+  getSundayOfCurrentWeek
+} from '../components/Utils';
+
+import { getTimeEntries } from '../services/Api';
 
 // Import mock data or API services as needed
-import { timeEntries } from '../services/Api';
+// import { timeEntries } from '../services/Api';
 
 const modes = ["Current week", "Current month", "Selected dates"];
 
@@ -72,6 +81,17 @@ function DateSelectorSidebar({ mode, setMode, setStartDate, setEndDate }) {
 function DetailsArea({ startDate, endDate }) {
 
   console.log (`Rendering DetailsArea with Start Date: ${startDate} and End Date: ${endDate}`); 
+  const [timeEntries, setTimeEntries] = useState([]);
+
+  useEffect(() => {
+    const fetchTimeEntries = async () => {
+      const tempEntries = await getTimeEntries(startDate, endDate);
+      console.log('Fetched time entries:', tempEntries);
+      setTimeEntries(tempEntries);
+    };
+
+    fetchTimeEntries();
+  }, [startDate, endDate]);
 
   // Calculate Total Hours for the Percentage denominator
   const totalHoursOverall = timeEntries.reduce((sum, entry) => sum + entry.hours, 0);

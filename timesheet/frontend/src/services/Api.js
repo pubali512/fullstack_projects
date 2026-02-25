@@ -157,6 +157,7 @@ export async function getProjects() {
   return res.json();
 }
 
+/* Submit timesheet entry */
 const API_TIMESHEETS = 'http://localhost:8080/api/timesheets';
 
 export async function submitTimesheet(entry) {
@@ -165,5 +166,44 @@ export async function submitTimesheet(entry) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(entry),
   });
+  return res.json();
+}
+
+export async function getTimeEntries(startDateStr, endDateStr) {
+  let currentDate = new Date(startDateStr);
+  const endDate = new Date(endDateStr);
+
+  let allEntries = [];
+
+  while (currentDate <= endDate) {
+    
+    const dateToApi = currentDate.toISOString().split('T')[0];
+
+    try {
+      console.log(`Calling API for: ${dateToApi}`);
+      const response = await getTimeSheetEntriesForDate(dateToApi); 
+
+      response.forEach(entry => {
+        console.log(`Received entry for ${dateToApi}:`, entry);
+        allEntries.push(entry);
+      });
+
+    } catch (error) {
+      console.error(`Failed for ${dateToApi}`, error);
+    }
+
+     currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+  }
+  console.log("Finished processing all dates!");
+  return allEntries;
+}
+
+async function getTimeSheetEntriesForDate(date) {
+  const endPoint = `${API_TIMESHEETS}/date/${date}`;
+  console.log(`Fetching time entries for date: ${date} from endpoint: ${endPoint}`);
+  const res = await fetch(endPoint);
+  if (!res.ok) {
+    throw new Error(`API call failed with status ${res.status} for date ${date}`);
+  }
   return res.json();
 }
