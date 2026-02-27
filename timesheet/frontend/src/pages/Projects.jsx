@@ -270,7 +270,7 @@ function CreateProjectForm({ projects, setProjects, formData, setFormData, showA
           <input
             type="text"
             className="input-field-small"
-            placeholder={formData.create_project.projectId || "Project ID"}
+            placeholder={formData.create_project.projectId || "max 15 chars, letters, digits, _ and - only, must be unique"}
             name="projectId"
             onChange={e => handleGenericInputChange('create_project', e, setFormData)}
           />
@@ -279,7 +279,7 @@ function CreateProjectForm({ projects, setProjects, formData, setFormData, showA
           <input
             type="text"
             className="input-field-small"
-            placeholder={formData.create_project.projectName || "Project Name"}
+            placeholder={formData.create_project.projectName || "Short descriptive name for the project"}
             name="projectName"
             onChange={e => handleGenericInputChange('create_project', e, setFormData)}
           />
@@ -325,7 +325,7 @@ function CreateTaskForm({ projects, setProjects, formData, setFormData, showAler
           <input
             type="text"
             className="input-field-small"
-            placeholder={formData.create_task.taskId || "Task ID"}
+            placeholder={formData.create_task.taskId || "max 15 chars, letters, digits, _ and - only, unique within a project"}
             name="taskId"
             onChange={e => handleGenericInputChange('create_task', e, setFormData)}
           />
@@ -334,7 +334,7 @@ function CreateTaskForm({ projects, setProjects, formData, setFormData, showAler
           <input
             type="text"
             className="input-field-small"
-            placeholder={formData.create_task.taskName || "Task Name"}
+            placeholder={formData.create_task.taskName || "Short descriptive name for the task"}
             name="taskName"
             onChange={e => handleGenericInputChange('create_task', e, setFormData)}
           />
