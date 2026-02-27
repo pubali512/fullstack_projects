@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import '../styles/Common.css';
 import '../styles/Timesheet.css';
@@ -7,10 +7,11 @@ import {
   getMondayOfWeek,
   getMondayOfCurrentWeek,
   getTasksForProject,
-  getTasksForProjectAndTaskId
+  getTasksForProjectAndTaskId,
+  getSundayOfWeek
 } from '../components/Utils';
 
-import { submitTimesheet } from '../services/Api';
+import { submitTimesheet, getTimeEntries } from '../services/Api';
 
 function convertDayToDate(selectedDateOfMonday, dayName) {
   const dayOffsets = {
@@ -134,6 +135,8 @@ function TaskDetailsArea({ timesheetData, setTimesheetData, selectedDay, selecte
 
   console.log(selectedDay);
 
+
+
   return (
     <main className="task-details-area">
       <h2>
@@ -229,6 +232,52 @@ export default function TimesheetPage({ projects, setProjects }) {
     Sunday: []
   });
 
+  // Fetch timesheet data when selectedDateOfMonday changes
+  useEffect(() => {
+    const fetchTimesheetData = async () => {
+      try {
+        const startDate = selectedDateOfMonday;
+        const endDate = getSundayOfWeek(selectedDateOfMonday);
+        
+        console.log(`Fetching timesheet data for week: ${startDate} to ${endDate}`);
+        const entries = await getTimeEntries(startDate, endDate);
+        console.log('Fetched entries:', entries);
+
+        // Convert flat entries array to day-organized structure
+        const organizedData = {
+          Monday: [],
+          Tuesday: [],
+          Wednesday: [],
+          Thursday: [],
+          Friday: [],
+          Saturday: [],
+          Sunday: []
+        };
+
+        entries.forEach(entry => {
+          const entryDate = new Date(entry.day);
+          const dayIndex = entryDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const dayName = dayNames[dayIndex];
+
+          console.log(`Organizing entry for date ${entry.day} under ${dayName}`); 
+
+          organizedData[dayName].push({
+            projectId: entry.projectId,
+            taskId: entry.taskId,
+            hours: entry.hours,
+            notes: entry.notes
+          });
+        });
+
+        setTimesheetData(organizedData);
+      } catch (error) {
+        console.error('Error fetching timesheet data:', error);
+      }
+    };
+
+    fetchTimesheetData();
+  }, [selectedDateOfMonday]);
 
   const addTask = () => {
     const newTask = { projectId: '', taskId: '', hours: '', notes: '' };
@@ -237,7 +286,6 @@ export default function TimesheetPage({ projects, setProjects }) {
       [selectedDay]: [...prev[selectedDay], newTask]
     }));
   };
-
 
 
   return (
