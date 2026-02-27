@@ -4,13 +4,13 @@ import '../styles/Common.css';
 import '../styles/Projects.css'
 
 // Import mock data or API services as needed
-import {AlertPopup} from '../components/UIComponents';
+import { AlertPopup } from '../components/UIComponents';
 
-import { 
-  createProject, 
-  createTask, 
-  updateProject, 
-  updateTask 
+import {
+  createProject,
+  createTask,
+  updateProject,
+  updateTask
 } from '../services/Api';
 
 import {
@@ -86,7 +86,7 @@ function getNewTaskDescription(formData, projects, projectId, taskId) {
   return formData.edit_task.description ||
     (task ? task.description : '');
 }
-  
+
 
 function generateTaskOptions(formData, projects) {
 
@@ -95,11 +95,11 @@ function generateTaskOptions(formData, projects) {
 
   return formData.edit_task.projectId &&
     getTasksForProject(projects, extractedProjectId).
-    map(task => (
-      <option key={task.taskId} value={task.taskId}>
-        {task.taskId} ({task.taskName})
-      </option>
-    ));
+      map(task => (
+        <option key={task.taskId} value={task.taskId}>
+          {task.taskId} ({task.taskName})
+        </option>
+      ));
 }
 
 function updateProjectsState(formName, formData, projects, setProjects) {
@@ -158,7 +158,7 @@ function updateProjectsState(formName, formData, projects, setProjects) {
       break;
 
     case 'edit_task':
-      { 
+      {
         setProjects(prev => prev.map(p => {
           if (p.projectId === extractIdFromIdNameTag(data.projectId)) {
             return {
@@ -265,14 +265,6 @@ function CreateProjectForm({ projects, setProjects, formData, setFormData, showA
       <div className="form-container">
         <h3 className='form-header'>Create New Project</h3>
         <div className="form-grid">
-          <label>Project Name</label>
-          <input
-            type="text"
-            className="input-field-small"
-            placeholder={formData.create_project.projectName || "Project Name"}
-            name="projectName"
-            onChange={e => handleGenericInputChange('create_project', e, setFormData)}
-          />
 
           <label>Project ID</label>
           <input
@@ -280,6 +272,15 @@ function CreateProjectForm({ projects, setProjects, formData, setFormData, showA
             className="input-field-small"
             placeholder={formData.create_project.projectId || "Project ID"}
             name="projectId"
+            onChange={e => handleGenericInputChange('create_project', e, setFormData)}
+          />
+
+          <label>Project Name</label>
+          <input
+            type="text"
+            className="input-field-small"
+            placeholder={formData.create_project.projectName || "Project Name"}
+            name="projectName"
             onChange={e => handleGenericInputChange('create_project', e, setFormData)}
           />
 
@@ -320,21 +321,21 @@ function CreateTaskForm({ projects, setProjects, formData, setFormData, showAler
             {projects.map(p => <option key={p.projectId}>{p.projectId} ({p.projectName})</option>)}
           </select>
 
-          <label>Task Name</label>
-          <input
-            type="text"
-            className="input-field-small"
-            placeholder={formData.create_task.taskName || "Task Name"}
-            name="taskName"
-            onChange={e => handleGenericInputChange('create_task', e, setFormData)}
-          />
-
           <label>Task ID</label>
           <input
             type="text"
             className="input-field-small"
             placeholder={formData.create_task.taskId || "Task ID"}
             name="taskId"
+            onChange={e => handleGenericInputChange('create_task', e, setFormData)}
+          />
+
+          <label>Task Name</label>
+          <input
+            type="text"
+            className="input-field-small"
+            placeholder={formData.create_task.taskName || "Task Name"}
+            name="taskName"
             onChange={e => handleGenericInputChange('create_task', e, setFormData)}
           />
 
@@ -381,9 +382,9 @@ function EditProjectForm({ projects, setProjects, formData, setFormData, showAle
           <input
             type="text"
             className="input-field-small"
-            placeholder={getNewProjectName(formData, 
-                projects, 
-                extractIdFromIdNameTag(formData.edit_project.projectId)) || "New Project Name"}
+            placeholder={getNewProjectName(formData,
+              projects,
+              extractIdFromIdNameTag(formData.edit_project.projectId)) || "New Project Name"}
             name="projectName"
             onChange={e => handleGenericInputChange('edit_project', e, setFormData)}
           />
@@ -391,9 +392,9 @@ function EditProjectForm({ projects, setProjects, formData, setFormData, showAle
           <label>Description</label>
           <textarea
             className="input-textarea"
-            placeholder={getNewProjectDescription(formData, 
-                projects, 
-                extractIdFromIdNameTag(formData.edit_project.projectId)) || "New Description"}
+            placeholder={getNewProjectDescription(formData,
+              projects,
+              extractIdFromIdNameTag(formData.edit_project.projectId)) || "New Description"}
             name="description"
             onChange={e => handleGenericInputChange('edit_project', e, setFormData)}
           ></textarea>
@@ -435,7 +436,7 @@ function EditTaskForm({ projects, setProjects, formData, setFormData, showAlert 
             onChange={e => handleGenericInputChange('edit_task', e, setFormData)}
           >
             <option>Select Task...</option>
-            {generateTaskOptions(formData, projects)} 
+            {generateTaskOptions(formData, projects)}
           </select>
 
           <label>Task Name</label>
@@ -443,9 +444,9 @@ function EditTaskForm({ projects, setProjects, formData, setFormData, showAlert 
             type="text"
             className="input-field-small"
             placeholder={
-              getNewTaskName(formData, 
-                projects, 
-                extractIdFromIdNameTag(formData.edit_task.projectId), 
+              getNewTaskName(formData,
+                projects,
+                extractIdFromIdNameTag(formData.edit_task.projectId),
                 extractIdFromIdNameTag(formData.edit_task.taskId)) || "New Task Name"}
             name="taskName"
             onChange={e => handleGenericInputChange('edit_task', e, setFormData)}
@@ -454,9 +455,9 @@ function EditTaskForm({ projects, setProjects, formData, setFormData, showAlert 
           <label>Description</label>
           <textarea
             className="input-textarea"
-            placeholder={getNewTaskDescription(formData, 
-              projects, 
-              extractIdFromIdNameTag(formData.edit_task.projectId), 
+            placeholder={getNewTaskDescription(formData,
+              projects,
+              extractIdFromIdNameTag(formData.edit_task.projectId),
               extractIdFromIdNameTag(formData.edit_task.taskId)) || "New Description"}
             name="description"
             onChange={e => handleGenericInputChange('edit_task', e, setFormData)}
@@ -545,9 +546,9 @@ export default function ProjectsPage({ projects, setProjects }) {
           formData={formData}
           setFormData={setFormData}
           projects={projects}
-          setProjects={setProjects} 
+          setProjects={setProjects}
           showAlert={showAlert}
-          />
+        />
       </main>
 
       <AlertPopup

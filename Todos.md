@@ -8,7 +8,9 @@
 ## Frontend 
 
 - [X] Generate dashboard display. 
-- [X] Task and project ID should contain only characters, underscores, hyphens and digits. Before creating a new project or task, validate the ID and return an error if it contains invalid characters.
+- [X] In the timesheet page, fetch and add them as historical data to be edited.
+- [ ] Task and project ID should contain only characters, underscores, hyphens and digits. Before creating a new project or task, validate the ID and return an error if it contains invalid characters.
+  [ ] In projects page, project and task ID inputs should appear before name.
 - [ ] Project and task ID should be limited to a certain length. Before creating a new project or task, validate the ID length and return an error if it exceeds 15 characters.
 - [ ] Generate display names for projects and tasks by combining their IDs with their names (e.g., "Project 1 (Website Redesign)", "Task 1 (Design Homepage)"). Limit them to a maximum N characters for better display in the UI. If the combined name exceeds N characters, truncate it and add an ellipsis (e.g., "Project 1 (Website Redesign...)" or "Task 1 (Design Homepage...)").
 - [ ] Task ID need not be unique acoss projects, but should be unique within a project. Before creating a new task, check if a task with the same ID already exists within the same project and return an error if it does.
