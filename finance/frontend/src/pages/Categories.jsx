@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
-import { transactionService, categories, mockData, monthNames} from '../services/api';
+import { transactionService, categories, mockData, monthNames } from '../services/api';
 import { useCurrency } from '../context/CurrencyContext';
-import { CalendarDays, ChevronRight, Filter} from 'lucide-react';
+import { CalendarDays, ChevronRight, Filter } from 'lucide-react';
 
 export default function Categories() {
   // 1. Date and Currency Configuration
@@ -46,10 +46,6 @@ export default function Categories() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-800 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Analytics Overview</h1>
-          <p className="text-slate-500 mt-1 flex items-center gap-2">
-            <Filter size={14} />
-            Filtering by {monthNames[selectedMonth - 1]} {selectedYear}
-          </p>
         </div>
         
         <div className="flex gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-800 shadow-xl">

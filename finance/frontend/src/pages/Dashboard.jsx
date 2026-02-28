@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
-import { transactionService, mockData} from '../services/api';
+import { transactionService, mockData } from '../services/api';
 import { useCurrency } from '../context/CurrencyContext';
-import { Search, Wallet, ArrowUpRight, ArrowDownLeft, FileText, Download, Calendar, Filter} from 'lucide-react';
+import { Search, Wallet, ArrowUpRight, ArrowDownLeft, FileText, Download, Calendar, Filter } from 'lucide-react';
 
 export default function Dashboard() {
   // 1. State Management
