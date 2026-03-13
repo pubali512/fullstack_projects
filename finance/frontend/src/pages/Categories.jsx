@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
-import { transactionService, categories, mockData, monthNames } from '../services/api';
+import { useState, useEffect } from 'react';
+import { apiService, monthNames } from '../services/api';
 import { useCurrency } from '../context/CurrencyContext';
-import { CalendarDays, ChevronRight, Filter } from 'lucide-react';
+import { CalendarDays, ChevronRight } from 'lucide-react';
 
 export default function Categories() {
-  // 1. Date and Currency Configuration
+  // Date and Currency Configuration
   const { currency, setCurrency, formatMoney, currencies } = useCurrency();
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
@@ -12,31 +12,26 @@ export default function Categories() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
-  // 2. Data Aggregation Logic  
-  const categoryStats = useMemo(() => {
-    let totalMonthlyExpense = 0;
-    const catTotals = {};
-    
-    // Initialize expense categories with 0
-    categories.filter(c => c !== 'Income').forEach(cat => { catTotals[cat] = 0; });
-
-    mockData.forEach(t => {
-      const tDate = new Date(t.date);
-      const tMonth = tDate.getMonth() + 1;
-      const tYear = tDate.getFullYear();
-
-      // Only sum if it matches the filter and is an expense (negative amount)
-      if (tMonth === selectedMonth && tYear === selectedYear && t.amount < 0) {
-        const absAmount = Math.abs(t.amount);
-        totalMonthlyExpense += absAmount;
-        if (catTotals[t.cat] !== undefined) {
-          catTotals[t.cat] += absAmount;
-        }
+  const [analytics, setAnalytics] = useState([]);
+  const [loading, setLoading] = useState(true);
+ 
+  // Fetch Analytics Data using apiService
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      setLoading(true);
+      try {
+        const data = await apiService.getCategoryAnalytics(selectedMonth, selectedYear);
+        setAnalytics(data);
+      } catch (error) {
+        console.error("Error fetching category analytics:", error);
+        setAnalytics([]);       /* Safety fallback */
+      } finally {
+        setLoading(false);
       }
-    });
+    };
 
-    return { totalMonthlyExpense, catTotals };
-  }, [selectedMonth, selectedYear]);
+    fetchAnalytics();
+  }, [selectedMonth, selectedYear]);  /* Runs whenever the dropdowns change */
 
 
   return (
@@ -79,42 +74,48 @@ export default function Categories() {
 
       {/* --- CATEGORY GRID --- */}
       <div className="space-y-6">
-        {categoryStats.totalMonthlyExpense === 0 ? (
-          /* Empty State */
+        {/* Check if the backend is still loading or if the array is empty */}
+        {loading ? (
+          <div className="py-24 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="text-slate-500 mt-4">Loading your analytics...</p>
+          </div>
+        ) : analytics.length === 0 ? (
+          /* Empty State - No data returned from Flask */
           <div className="py-24 text-center bg-slate-900/40 rounded-3xl border-2 border-dashed border-slate-800">
-             <CalendarDays className="mx-auto text-slate-700 mb-4" size={56} />
-             <p className="text-slate-500 font-medium text-lg">No expenses found for this period.</p>
-             <p className="text-slate-600 text-sm mt-1">Select a different month or year to view data.</p>
+            <CalendarDays className="mx-auto text-slate-700 mb-4" size={56} />
+            <p className="text-slate-500 font-medium text-lg">No expenses found for this period.</p>
+            <p className="text-slate-600 text-sm mt-1">Select a different month or year to view data.</p>
           </div>
         ) : (
-          /* Card Grid */
+          /* Card Grid - Filtering out Income so only Expenses show as cards */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Object.keys(categoryStats.catTotals).map(cat => (
-              <div key={cat} className="group bg-slate-900 border border-slate-800 p-6 rounded-2xl hover:border-blue-500/50 transition-all shadow-lg">
+            {analytics.filter(item => !item.is_income).map((item) => (
+              <div key={item.name} className="group bg-slate-900 border border-slate-800 p-6 rounded-2xl hover:border-blue-500/50 transition-all shadow-lg">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <span className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">Category</span>
-                    <h3 className="text-slate-200 font-bold text-lg leading-tight">{cat}</h3>
+                    <h3 className="text-slate-200 font-bold text-lg leading-tight">{item.name}</h3>
                   </div>
                   <div className="text-right">
                     <p className="text-white font-bold text-xl tabular-nums">
-                      {formatMoney(categoryStats.catTotals[cat])}
+                      {formatMoney(item.total_amount)}
                     </p>
                   </div> 
                 </div>
 
-                {/* Progress Visual */}
+                {/* Progress Visual - Using data directly from Flask */}
                 <div className="space-y-2">
                   <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
                     <div 
                       className="bg-blue-500 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-                      style={{ width: `${(categoryStats.catTotals[cat] / categoryStats.totalMonthlyExpense) * 100}%` }}
+                      style={{ width: `${item.contribution_pct}%` }}
                     />
                   </div>
                   <div className="flex justify-between text-[10px] font-bold uppercase tracking-tighter">
                     <span className="text-slate-500">Contribution</span>
                     <span className="text-blue-400">
-                      {((categoryStats.catTotals[cat] / categoryStats.totalMonthlyExpense) * 100).toFixed(1)}%
+                      {item.contribution_pct}%
                     </span>
                   </div>
                 </div>

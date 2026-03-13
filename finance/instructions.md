@@ -133,11 +133,52 @@ export default function Transactions() {
 
         Sum only the negative values (Expenses).
 ==============================================================
+- OldloadData
+
+const loadData = async () => {
+    setLoading(true);
+    try {
+      const data = await transactionService.getAll();
+      // If the service returns data (even from its own internal fallback), set it
+      setTransactions(data);
+    } catch (error) {
+      console.error("API Error, using local mockData fallback:", error);
+      // Manual fallback to the imported mockData if the service fails entirely
+      setTransactions(mockData);
+    } finally {
+      setLoading(false);
+    }
+  };
 ==============================================================
+- Old handleSave
+
+const handleSave = async () => {
+    try {
+      await transactionService.update(editId, editFormData);
+      setEditId(null);
+      await loadData(); // Refresh list
+    } catch (error) {
+      // If API fails, update local state only so you can still test the UI
+      setTransactions(transactions.map(t => t.id === editId ? editFormData : t));
+      setEditId(null);
+      console.warn("Saved to local state only (Flask offline)");
+    }
+  };
 ==============================================================
-<p className="text-slate-400 font-medium mt-1">
-            Summary of financial position and activity.
-          </p>
+- Old handleDelete
+
+const handleDelete = async (id) => {
+    if (window.confirm("Delete this transaction?")) {
+      try {
+        await transactionService.delete(id);
+        await loadData();
+      } catch (error) {
+        setTransactions(transactions.filter(t => t.id !== id));
+        console.warn("Deleted from local state only (Flask offline)");
+      }
+    }
+  };
+
 
 ## Troubleshooting/issues  
 
@@ -146,7 +187,7 @@ export default function Transactions() {
   Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-# Spring boot backend setup 
+# Flask backend setup 
 
 - Prerequisites:
   - Java JDK installed (https://adoptium.net/ - JDK 21) 
@@ -159,7 +200,13 @@ export default function Transactions() {
   - VS code extensions: Java Extension Pack, Spring Boot Extension Pack, Java Test Runner, Maven for Java 
   - Optional: Postman for API testing (https://www.postman.com/downloads/) 
 
-- Project structure: *TBD*
+- Backend Directory structure
+  finance-app/ (Root)
+  ├── backend/ (Flask)
+      ├── venv/ (All your libraries are hidden here)
+      ├── app/
+      ├── requirements.txt
+      └── run.py
 
 ## Setup commands and steps
 
@@ -169,6 +216,25 @@ export default function Transactions() {
   mvn spring-boot:run
 ```
 
-- Open
+==============================================================
+- Migration 
+  - Step 1: # Ensure one should be in the 'backend' folder  
+            # and venv is active before running
+            export FLASK_APP=run.py
+            flask db init
+  - Step 2: Generate the Migration Script (The "Commit")
+            flask db migrate -m "Added category and 
+            transaction tables for analytics"
+  - Step 3: Apply the Migration (The "Push")
+            flask db upgrade
+==============================================================
+==============================================================
+==============================================================
+==============================================================
+==============================================================
+==============================================================
+==============================================================
+==============================================================
+
 
 ## Troubleshooting/issues

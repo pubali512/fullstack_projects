@@ -1,90 +1,147 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useCurrency } from '../context/CurrencyContext';
-import { transactionService, categories, mockData } from '../services/api';
+import { apiService, categories, paginationOptions } from '../services/api';
 import { Pencil, Check, X, Trash2, Loader2, Search } from 'lucide-react';
 
 export default function Transactions() {
   const { currency, formatMoney } = useCurrency();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(10);     // Pagination
-  const [searchTerm, setSearchTerm] = useState("");         // Search while editing/viewing
-  const [isModalOpen, setIsModalOpen] = useState(false);    // Add Modal
+  const [visibleCount, setVisibleCount] = useState(10);     /* Pagination */
+  const [currentPage, setCurrentPage] = useState(0);        /* 0 is the first page */
+  const [searchTerm, setSearchTerm] = useState("");         /* Search while editing/viewing */
+  const [isModalOpen, setIsModalOpen] = useState(false);    /* Add Modal */
   const [newTransaction, setNewTransaction] = useState({
     date: new Date().toISOString().split('T')[0],
-    desc: '',
-    cat: categories[0],
+    description: '',
+    category  : categories[0],
     amount: '',
-    recurring: 'non-recurring'          // Default value
+    status: 'One-time'          /* Default value */
   });
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Logic: Filter by search first, then sort by date, then slice for pagination
-  const filteredTransactions = transactions
-    .filter(t => 
-      t.desc.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      t.cat.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  // Logic: Filter by search, category, recurring status, then slice
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      /* Clean the search term */
+      const search = searchTerm.toLowerCase().trim();
+      if (!search) return true;
 
-  const displayTransactions = filteredTransactions.slice(0, visibleCount);
+      /* Map to the NEW keys from the Flask Backend */
+      /* Using || "" to prevent crashes if a field is somehow null */
+      const description = (t.description || "").toLowerCase();
+      const category = (t.category || "").toLowerCase();
+      const status = (t.status || "").toLowerCase();    /* "One-time" or "Recurring" */
+      
+      /*  Match against the search term */
+      return (
+        description.includes(search) || 
+        category.includes(search) || 
+        status.includes(search)
+      );
+    });
+    
+  }, [transactions, searchTerm]);
 
-  
+  const displayTransactions = filteredTransactions;
+
+
   // State for Inline Editing
   const [editId, setEditId] = useState(null);
-  const [editFormData, setEditFormData] = useState({});
+  const [editFormData, setEditFormData] = useState({
+    date: '',
+    description: '',
+    category: '',
+    status: 'One-time',
+    amount: ''
+  });
+  
 
-  // 1. Load data from the Service on component mount
+  // Load data from the API on component mount 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [visibleCount, currentPage]);  /* Reload when pagination changes */
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await transactionService.getAll();
-      // If the service returns data (even from its own internal fallback), set it
+      const data = await apiService.getTransactions({ 
+        limit: visibleCount,
+        offset: currentPage * visibleCount 
+      });
       setTransactions(data);
     } catch (error) {
-      console.error("API Error, using local mockData fallback:", error);
-      // Manual fallback to the imported mockData if the service fails entirely
-      setTransactions(mockData);
+      console.error("Error loading data from backend:", error);
+      setTransactions([]); 
     } finally {
       setLoading(false);
     }
   };
 
-  // 2. Prepare the row for editing
+  // Prepare the row for editing (Populates the pop-up/modal)
   const handleEditClick = (transaction) => {
     setEditId(transaction.id);
-    setEditFormData({ ...transaction });
+    /* Ensure the form matches the keys expected by the backend */
+    setEditFormData({ 
+      ...transaction,
+      /* If backend sends 'category' as a string, it maps correctly here */
+      status: transaction.status === 'Recurring' ? 'Recurring' : 'One-time'
+    });
+    /* If a modal is used, set the open state */
+    // setIsModalOpen(true); 
   };
 
-  // 3. Save changes (Logic for both Mock and API)
+  // Save changes (Logic for both Mock and API)
   const handleSave = async () => {
     try {
-      await transactionService.update(editId, editFormData);
+      const payload = {
+        category: editFormData.category,
+        description: editFormData.description,
+        amount: parseFloat(editFormData.amount),
+        date: editFormData.date,
+        status: editFormData.status    /* Should be "One-time" or "Recurring" */
+      };
+
+      // Use the apiService instead of fetch
+      if (editId) {
+        /* CASE A: Use updateTransaction service */
+        await apiService.updateTransaction(editId, payload);
+      } else {
+        /* CASE B: Use createTransaction service */
+        await apiService.createTransaction(payload);
+      }
+
+      /* Refresh the UI by calling the existing loadData function */
+      await loadData();
+
+      /* Reset UI states */
       setEditId(null);
-      await loadData(); // Refresh list
+      setIsModalOpen(false);
+      console.log("Saved to Database successfully!");
+
     } catch (error) {
-      // If API fails, update local state only so you can still test the UI
-      setTransactions(transactions.map(t => t.id === editId ? editFormData : t));
-      setEditId(null);
-      console.warn("Saved to local state only (Flask offline)");
+      console.error("Save error:", error);
+      alert("Could not save transaction. Please check if Flask is running.");
     }
   };
 
-  // 4. Delete Logic
+  // Delete Logic
   const handleDelete = async (id) => {
-    if (window.confirm("Delete this transaction?")) {
-      try {
-        await transactionService.delete(id);
-        await loadData();
-      } catch (error) {
-        setTransactions(transactions.filter(t => t.id !== id));
-        console.warn("Deleted from local state only (Flask offline)");
-      }
+  if (window.confirm("Delete this transaction?")) {
+    try {
+      /* Call the centralized API service */
+      await apiService.deleteTransaction(id);
+
+      /* Optimistic Update: Remove from local state immediately */
+      setTransactions(prev => prev.filter(t => t.id !== id));
+      
+      console.log(`Transaction ${id} deleted successfully.`);
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Server error: Could not delete the transaction.");
     }
-  };
+  }
+};
 
 
   if (loading) {
@@ -110,24 +167,31 @@ export default function Transactions() {
             <span className="text-[10px] font-black text-slate-500 uppercase">Show</span>
             <select 
               value={visibleCount} 
-              onChange={(e) => setVisibleCount(Number(e.target.value))}
-              className="bg-transparent text-white text-xs font-bold outline-none cursor-pointer"
+              onChange={(e) => {
+                setVisibleCount(Number(e.target.value));
+                setCurrentPage(0);        // --- Reset to first page when changing items per page
+              }}
+              className="bg-transparent text-white text-xs font-bold outline-none cursor-pointer pr-1"
             >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={30}>30</option>
-              <option value={40}>40</option>
-              <option value={50}>50</option>
-              <option value={60}>60</option>
-              <option value={70}>70</option>
-              <option value={80}>80</option>
-              <option value={90}>90</option>
-              <option value={100}>100</option>
+              {paginationOptions.map(num => (
+                <option key={num} value={num} className="bg-slate-900">
+                  {num}
+                </option>
+              ))}
             </select>
           </div>
 
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setNewTransaction({
+                date: new Date().toISOString().split('T')[0],
+                description: '',
+                category: categories[0],
+                amount: '',
+                status: 'One-time'
+              });
+              setIsModalOpen(true);
+            }}
             className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20"
           >
             + Add Transaction
@@ -156,6 +220,7 @@ export default function Transactions() {
               <th className="p-4">Date</th>
               <th className="p-4">Description</th>
               <th className="p-4">Category</th>
+              <th className="p-4">Status</th>
               <th className="p-4 text-right">Amount ({currency})</th>
               <th className="p-4 text-center">Actions</th>
             </tr>
@@ -167,10 +232,18 @@ export default function Transactions() {
                   /* --- EDIT MODE --- */
                   <>
                     <td className="p-2"><input type="date" className="bg-slate-800 border border-slate-700 p-2 rounded text-sm w-full text-white" value={editFormData.date} onChange={(e) => setEditFormData({...editFormData, date: e.target.value})}/></td>
-                    <td className="p-2"><input type="text" className="bg-slate-800 border border-slate-700 p-2 rounded text-sm w-full text-white" value={editFormData.desc} onChange={(e) => setEditFormData({...editFormData, desc: e.target.value})}/></td>
+                    <td className="p-2"><input type="text" className="bg-slate-800 border border-slate-700 p-2 rounded text-sm w-full text-white" value={editFormData.description} onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}/></td>
                     <td className="p-2">
-                      <select className="bg-slate-800 border border-slate-700 p-2 rounded text-sm w-full text-white" value={editFormData.cat} onChange={(e) => setEditFormData({...editFormData, cat: e.target.value})}>
+                      <select className="bg-slate-800 border border-slate-700 p-2 rounded text-sm w-full text-white" value={editFormData.category} onChange={(e) => setEditFormData({...editFormData, category: e.target.value})}>
                         {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </td>
+                    <td className="p-2">
+                      <select 
+                        className="bg-slate-800 border border-slate-700 p-2 rounded text-sm w-full text-white font-bold" value={editFormData.status} onChange={(e) => setEditFormData({...editFormData, status: e.target.value})}
+                      >
+                        <option value="One-time">One-time</option>
+                        <option value="Recurring">Recurring</option>
                       </select>
                     </td>
                     <td className="p-2"><input type="number" className="bg-slate-800 border border-slate-700 p-2 rounded text-sm w-full text-white text-right" value={editFormData.amount} onChange={(e) => setEditFormData({...editFormData, amount: parseFloat(e.target.value)})}/></td>
@@ -185,17 +258,20 @@ export default function Transactions() {
                   /* --- READ MODE --- */
                   <>
                     <td className="p-4 font-mono text-sm">{t.date}</td>
-                    <td className="p-4 font-medium text-white">{t.desc}</td>
+                    <td className="p-4 font-medium text-white">{t.description}</td>
                     <td className="p-4">
-                      <div className="flex flex-col">
-                        <span className="bg-slate-800 text-slate-400 px-3 py-1 rounded-full text-[10px] font-black uppercase border border-slate-700 w-fit">
-                          {t.cat}
+                      <span className="bg-slate-800 text-slate-400 px-3 py-1 rounded-full text-xs border border-slate-700">
+                          {t.category}
                         </span>
-                        {/* RECURRING INDICATOR */}
-                        <span className={`text-[9px] mt-1 font-bold ${t.recurring === 'recurring' ? 'text-indigo-400' : 'text-slate-600'}`}>
-                          {t.recurring === 'recurring' ? '● Recurring' : '○ Non-recurring'}
+                    </td>
+                    <td className="p-4">
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded border ${
+                        t.status === 'Recurring' 
+                          ? 'text-indigo-400 border-indigo-500/30 bg-indigo-500/5' 
+                          : 'text-slate-500 border-slate-700 bg-slate-800/50'
+                      }`}>
+                        {t.status}
                         </span>
-                      </div>
                     </td>
                     <td className={`p-4 text-right font-bold ${t.amount > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {formatMoney(t.amount)} 
@@ -213,6 +289,32 @@ export default function Transactions() {
           </tbody>
         </table>
       </div>
+
+      {/* --- PAGINATION CONTROLS --- */}
+      <div className="flex items-center gap-3 mt-6 px-4 py-3 ml-auto justify-end">
+        <button 
+          onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+          disabled={currentPage === 0}
+          className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-black rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          Previous
+        </button>
+        
+        <div className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-black rounded-xl transition-all">
+          Page <span className="text-white">{currentPage + 1}</span>
+        </div>
+
+        <button 
+          onClick={() => setCurrentPage(prev => prev + 1)}
+          // --- Disable if the current fetch returned fewer items than the limit (end of data)
+          disabled={transactions.length < visibleCount}
+          className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-black rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          Next
+        </button>
+      </div>
+      
+
       {/* --- POP-UP MODAL (ADD TRANSACTION) --- */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
@@ -222,13 +324,18 @@ export default function Transactions() {
             <div className="space-y-4">
               <div>
                 <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Category</label>
-                <input type="text" className="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-blue-500" 
-                  onChange={(e) => setNewTransaction({...newTransaction, cat: e.target.value})} />
+                <select 
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-blue-500"
+                  value={newTransaction.category}
+                  onChange={(e) => setNewTransaction({...newTransaction, category: e.target.value})}
+                >
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
               </div>
               <div>
                 <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Description</label>
                 <input type="text" className="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-blue-500" 
-                  onChange={(e) => setNewTransaction({...newTransaction, desc: e.target.value})} />
+                  onChange={(e) => setNewTransaction({...newTransaction, description: e.target.value})} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -247,20 +354,58 @@ export default function Transactions() {
               <div>
                 <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Status</label>
                  <select className="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-blue-500"
-                    onChange={(e) => setNewTransaction({...newTransaction, recurring: e.target.value})}>
-                    <option value="non-recurring">One-time Expense</option>
-                    <option value="recurring">Monthly Recurring</option>
-                    <option value="recurring">Yearly Recurring</option>
+                    onChange={(e) => setNewTransaction({...newTransaction, status: e.target.value})}>
+                    <option value="One-time">One-time Expense</option>
+                    <option value="Recurring">Monthly Recurring</option>
+                    <option value="Recurring">Yearly Recurring</option>
                   </select>
               </div>
 
               <div className="flex gap-3 pt-4">
                 <button onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-3 bg-slate-800 text-white rounded-2xl font-bold hover:bg-slate-700 transition-all">Cancel</button>
-                <button onClick={async () => {
-                  // Logic to call transactionService.create(newTransaction)
-                  setIsModalOpen(false);
-                  loadData();
-                }} className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/30">Save Transaction</button>
+                <button 
+                  disabled={isSaving}
+                  onClick={async () => {
+                    setIsSaving(true);
+                    try {
+                      // Using apiService to send the data
+                      await apiService.createTransaction({
+                        category: newTransaction.category,
+                        description: newTransaction.description,
+                        amount: parseFloat(newTransaction.amount),
+                        date: newTransaction.date,
+                        status: newTransaction.status
+                      });
+
+                      // Success logic: Close modal and refresh the list
+                      setIsModalOpen(false);
+                      await loadData();
+                      console.log("Transaction added successfully!");
+                    } catch (error) {
+                      console.error("Save failed:", error);
+                      // --- Axios errors often store the message in error.response.data.error
+                      const errorMsg = error.response?.data?.error || "Could not connect to the backend.";
+                      alert(`Error: ${errorMsg}`);
+                    }finally {
+                      // --- Always stop the spinner, even if it fails
+                      setIsSaving(false);
+                    }
+                  }} 
+                  className={`flex-1 px-4 py-3 text-white rounded-2xl font-bold transition-all shadow-lg shadow-blue-500/30 ${
+                    isSaving 
+                      ? 'bg-blue-800 cursor-not-allowed opacity-80' 
+                      : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/30'
+                  }`}
+                >
+                  {isSaving ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="animate-spin" size={20} />
+                      <span>Saving...</span>
+                    </div>
+                  ) : (
+                    "Save Transaction"
+                  )}
+                </button>
               </div>
             </div>
           </div>

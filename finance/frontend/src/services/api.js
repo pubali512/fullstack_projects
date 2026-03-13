@@ -19,50 +19,71 @@ export const monthNames = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-// Optional: Supported years
-// export const years = [2024, 2025, 2026];
+// Available years
+export const years = [2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033];
+
+// Pagination Options
+export const paginationOptions = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
 // Mock Data (Use this while Flask is offline)
 export const mockData = [
-  { id: 1, date: '2026-02-25', desc: 'Grocery Store', cat: 'Grocery', amount: -85.50 },
-  { id: 2, date: '2026-02-24', desc: 'Salary', cat: 'Income', amount: 5000.00 },
-  { id: 3, date: '2026-02-23', desc: 'Apartment Rent', cat: 'Housing', amount: -800.00 },
-  { id: 4, date: '2026-01-15', desc: 'Old Rent', cat: 'Housing', amount: -500.00 },
-  { id: 5, date: '2026-02-10', desc: 'Cinema', cat: 'Entertainment', amount: -40.00 },
+  { id: 1, date: '2026-02-25', description: 'Grocery Store', category: 'Grocery', amount: -85.50 },
+  { id: 2, date: '2026-02-24', description: 'Salary', category: 'Income', amount: 5000.00 },
+  { id: 3, date: '2026-02-23', description: 'Apartment Rent', category: 'Housing', amount: -800.00 },
+  { id: 4, date: '2026-01-15', description: 'Old Rent', category: 'Housing', amount: -500.00 },
+  { id: 5, date: '2026-02-10', description: 'Cinema', category: 'Entertainment', amount: -40.00 },
 ];
 
 // API Configuration
-const apiBaseUrl = 'http://127.0.0.1:5001/api'; 
+const apiBaseUrl = 'http://127.0.0.1:5000/api'; 
 
-const api = axios.create({
+const apiClient = axios.create({
   baseURL: apiBaseUrl,
   headers: { 'Content-Type': 'application/json' }
 });
 
-// API Services
-export const transactionService = {
-  getAll: async () => {
+// Centralized API Services
+export const apiService = {
+  // --- DASHBOARD ---
+  getDashboardStats: async (month, year) => {
+    const response = await apiClient.get('/dashboard/stats', {
+      params: { month, year }
+    });
+    return response.data;
+  },
+
+  // --- TRANSACTIONS ---
+  /* Strictly handle the pagination limit and filters */
+  getTransactions: async (params = {}) => {
     try {
-      const response = await api.get('/transactions');
+      const response = await apiClient.get('/transactions', { params });
       return response.data;
     } catch (error) {
-      console.warn("Flask Backend unreachable. Falling back to Mock Data.");
-      return mockData;     // Returns mock data if API fails
+      console.warn("Backend unreachable. Falling back to Mock Data.");
+      return mockData; 
     }
   },
 
-  create: async (data) => {
-    const response = await api.post('/transactions', data);
+  createTransaction: async (data) => {
+    const response = await apiClient.post('/transactions', data);
     return response.data;
   },
 
-  update: async (id, data) => {
-    const response = await api.put(`/transactions/${id}`, data);
+  updateTransaction: async (id, data) => {
+    const response = await apiClient.put(`/transactions/${id}`, data);
     return response.data;
   },
 
-  delete: async (id) => {
-    const response = await api.delete(`/transactions/${id}`);
+  deleteTransaction: async (id) => {
+    const response = await apiClient.delete(`/transactions/${id}`);
+    return response.data;
+  },
+
+  // --- CATEGORIES / ANALYTICS ---
+  getCategoryAnalytics: async (month, year) => {
+    const response = await apiClient.get('/categories/analytics', {
+      params: { month, year }
+    });
     return response.data;
   }
 };
