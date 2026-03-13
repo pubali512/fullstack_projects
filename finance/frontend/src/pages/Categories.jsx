@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { apiService, monthNames } from '../services/api';
+import { apiService, monthNames, years } from '../services/api';
 import { useCurrency } from '../context/CurrencyContext';
 import { CalendarDays, ChevronRight } from 'lucide-react';
 
 export default function Categories() {
   // Date and Currency Configuration
   const { currency, setCurrency, formatMoney, currencies } = useCurrency();
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
   
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState(
+    (new Date().getMonth() + 1).toString().padStart(2, '0')
+  );
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const [analytics, setAnalytics] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,7 +20,10 @@ export default function Categories() {
     const fetchAnalytics = async () => {
       setLoading(true);
       try {
-        const data = await apiService.getCategoryAnalytics(selectedMonth, selectedYear);
+        const data = await apiService.getCategoryAnalytics(
+          parseInt(selectedMonth), 
+          parseInt(selectedYear)
+        );
         setAnalytics(data);
       } catch (error) {
         console.error("Error fetching category analytics:", error);
@@ -59,7 +62,10 @@ export default function Categories() {
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
           >
-            {monthNames.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+            {monthNames.map((m, i) => {
+              const val = (i + 1).toString().padStart(2, '0'); // Matches "01", "02" backend format
+              return <option key={val} value={val}>{m}</option>;
+            })}
           </select>
 
           <select 
@@ -67,7 +73,9 @@ export default function Categories() {
             value={selectedYear}
             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
           >
-            {years.map(y => <option key={y} value={y}>{y}</option>)}
+            {years.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
           </select>
         </div>
       </div>
@@ -109,13 +117,14 @@ export default function Categories() {
                   <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
                     <div 
                       className="bg-blue-500 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-                      style={{ width: `${item.contribution_pct}%` }}
+                      /* Use fallback in case backend key is 'percentage' instead of 'contribution_pct' */
+                      style={{ width: `${item.contribution_pct || item.percentage || 0}%` }}
                     />
                   </div>
                   <div className="flex justify-between text-[10px] font-bold uppercase tracking-tighter">
                     <span className="text-slate-500">Contribution</span>
                     <span className="text-blue-400">
-                      {item.contribution_pct}%
+                      {Number(item.contribution_pct || item.percentage || 0).toFixed(1)}%
                     </span>
                   </div>
                 </div>

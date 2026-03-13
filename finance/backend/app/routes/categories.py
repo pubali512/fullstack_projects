@@ -12,18 +12,22 @@ def get_category_analytics():
     now = datetime.now()
     month = request.args.get('month', default=now.month, type=int)
     year = request.args.get('year', default=now.year, type=int)
-
-    # Fetch all categories
-    categories = Category.query.all()
     
-    # Calculate Total Expenses (Strictly amounts < 0)
-    total_expenses = db.session.query(func.sum(Transaction.amount)).filter(
-        Transaction.amount < 0,
+    # Get the ID for 'Income' to exclude it from "Total Expenses"
+    income_cat = Category.query.filter_by(name='Income').first()
+    income_id = income_cat.id if income_cat else None
+
+    # Calculate TOTAL SPENDING (Sum of all categories EXCEPT Income)
+    total_spending = db.session.query(func.sum(Transaction.amount)).filter(
+        Transaction.category_id != income_id,
         func.extract('month', Transaction.date) == month,
         func.extract('year', Transaction.date) == year
     ).scalar() or 0
 
+    # Fetch all categories
+    categories = Category.query.all()
     results = []
+    
     for cat in categories:
         # Sum transactions for THIS specific category
         cat_total = db.session.query(func.sum(Transaction.amount)).filter(
@@ -37,9 +41,8 @@ def get_category_analytics():
         is_income = (cat.name == 'Income')
         
         # Only calculate contribution for expense categories
-        # and use abs() because both cat_total and total_expenses are negative
-        if not is_income and total_expenses < 0:
-            contribution = (float(cat_total) / float(total_expenses)) * 100
+        if not is_income and total_spending > 0:
+            contribution = (float(cat_total) / float(total_spending)) * 100
 
         results.append({
             "name": cat.name,
